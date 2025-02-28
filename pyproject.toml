@@ -1,0 +1,34 @@
+[project]
+name = "aerith-cbot"
+version = "0.1.0"
+description = "A cute cbot"
+readme = "README.md"
+authors = [{ name = "shinoxzu", email = "shinoxzu@gmail.com" }]
+requires-python = ">=3.13"
+dependencies = [
+    "aiogram>=3.18.0",
+    "alembic>=1.14.1",
+    "asyncpg>=0.30.0",
+    "chatgpt-md-converter>=0.2.0",
+    "dishka>=1.4.2",
+    "greenlet>=3.1.1",
+    "mem0ai[graph]>=0.1.55",
+    "openai>=1.64.0",
+    "pydantic>=2.10.6",
+    "python-dotenv>=1.0.1",
+    "sqlalchemy>=2.0.38",
+    "uuid-utils>=0.10.0",
+]
+
+[project.scripts]
+bot = "aerith_cbot.cli:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+extend-select = ["I"]

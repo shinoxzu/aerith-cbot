@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Configs
+config.toml
+config.*.toml
+!config.example.toml
+
+.env
+!.env.example
+
+alembic.ini
+alembic.*.ini
+!alembic.example.ini
+
+# OS-specific
+.DS_Store
+
+# Editors
+.idea

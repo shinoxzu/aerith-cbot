@@ -1,0 +1,25 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "response_format",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "array",
+          "description": "An array of text responses, can be null. Use this sometime for imitate thinking, like a people.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sticker": {
+          "type": ["string", "null"],
+          "description": "An sticker response, can be null. Use this if you want to send a sticker. You must pass an EXACLTY one EMOJI here. Use this wisely."
+        }
+      },
+      "required": ["text", "sticker"],
+      "additionalProperties": false
+    }
+  }
+}

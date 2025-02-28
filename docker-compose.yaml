@@ -1,0 +1,79 @@
+services:
+  bot:
+    command: sh -c ".venv/bin/alembic --config ${ALEMBIC_CONFIG_PATH} upgrade head && .venv/bin/bot"
+    restart: unless-stopped
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - CONFIG_PATH=${BOT_CONFIG_PATH}
+      - LLM_CONFIG_PATH=${LLM_CONFIG_PATH}
+      - PYTHONUNBUFFERED=1
+  neo4j:
+    image: neo4j:latest
+    restart: unless-stopped
+    environment:
+      - NEO4J_AUTH=neo4j/secretpass
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - neo4j-data:/data
+    ports:
+      - 7474:7474
+    healthcheck:
+      test: wget http://localhost:7474 || exit 1
+      interval: 1s
+      timeout: 10s
+      retries: 10
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    configs:
+      - source: qdrant_config
+        target: /qdrant/config/production.yaml
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - 6333:6333
+    healthcheck:
+      test: bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1
+      interval: 1s
+      timeout: 10s
+      retries: 10
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: pg_isready -d ${POSTGRES_DB}
+      interval: 1s
+      timeout: 10s
+      retries: 10
+
+configs:
+  qdrant_config:
+    content: |
+      log_level: INFO
+
+volumes:
+  chroma-data:
+    driver: local
+  db-data:
+    driver: local
+  neo4j-data:
+    driver: local
+  qdrant-data:
+    driver: local

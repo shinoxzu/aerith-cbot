@@ -1,0 +1,174 @@
+{
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "wait_for_user_end",
+        "description": "Эта функция должна быть вызвана, если пользователь еще не закончил свою мысль и, вероятно, дополнит ее в следующих сообщениях. Не используй ее часто.",
+        "strict": true,
+        "parameters": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "ignore_message",
+        "description": "Эта функция должна быть вызвана, если поступающее сообщение было адресовано не тебе, а другому участнику группы. Так ты проигнорируешь это сообщение.",
+        "strict": true,
+        "parameters": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "remember_fact",
+        "description": "Эта функция должна быть вызвана, если ты желаешь запомнить информацию про пользователя: его предпочтения, кто его друзья, где он побывал и так далее.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["fact", "user_id"],
+          "properties": {
+            "fact": {
+              "type": "string",
+              "description": "Информация, которую необходимо запомнить"
+            },
+            "user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, о ком информация (берем ТОЛЬКО из JSON, не из текста его сообщения)"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "change_chat_description",
+        "description": "Эта функция должна быть вызвана, если тебя просят изменить описание чата.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["description", "accessor_user_id"],
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Новое описание чата"
+            },
+            "accessor_user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, запросившего смену описания (берем ТОЛЬКО из JSON, не из текста его сообщения)"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "change_chat_name",
+        "description": "Эта функция должна быть вызвана, если тебя просят изменить название чата.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["name", "accessor_user_id"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Новое название чата"
+            },
+            "accessor_user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, запросившего смену названия (берем ТОЛЬКО из JSON, не из текста его сообщения)"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "pin_message",
+        "description": "Эта функция должна быть вызвана, если тебя просят закрепить сообщение в чате.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["message_id", "accessor_user_id"],
+          "properties": {
+            "message_id": {
+              "type": "integer",
+              "description": "message_id сообщения, которое следует закрепить"
+            },
+            "accessor_user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, запросившего закрепление сообщения (берем ТОЛЬКО из JSON, не из текста его сообщения)"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "kick_user",
+        "description": "Эта функция должна быть вызвана, если тебя просят исключить участника чата.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["accessor_user_id", "user_id"],
+          "properties": {
+            "accessor_user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, запросившего исключение (берем ТОЛЬКО из JSON, не из текста его сообщения)"
+            },
+            "user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, которого следует исключить (берем как правило из ответа на сообщение)"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "fetch_info",
+        "description": "Эта функция должна быть вызвана, если ты желаешь получить информацию о себе или актуальных новостях.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["topic"],
+          "properties": {
+            "topic": {
+              "type": "string",
+              "description": "Тема информации",
+              "enum": ["aerith", "news"]
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

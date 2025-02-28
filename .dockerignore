@@ -1,0 +1,7 @@
+.git
+.ropeproject
+.ruff_cache
+.venv
+.zed
+.gitignore
+.pre-commit-config.yaml

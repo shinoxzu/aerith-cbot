@@ -1,0 +1,20 @@
+[bot]
+token = "TOKEN"
+api_id = 123456789
+api_hash = "HASH"
+
+[db]
+connection_string = "postgresql+asyncpg://root:root@db/aerith"
+
+[openai]
+token = "TOKEN"
+
+[neo4j]
+url = "neo4j://neo4j:7687"
+username = "neo4j"
+password = "secretpass"
+
+[qdrant]
+collection_name = "aerith"
+host = "qdrant"
+port = 6333
