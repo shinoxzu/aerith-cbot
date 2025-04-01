@@ -31,7 +31,7 @@ start_time = текущее время
 потому что юзеры смогут создавать новые чаты и расходовать токены там
 * почему нельзя считать лимиты только для юзера?
 потому что будет неловкая ситуация: модель попрощалась с одним пользователем в чате, но с другим общается
-спокойно. а того, с кем попращалась, будет игнорить.
+спокойно. а того, с кем попрощалась, будет игнорить.
 """
 
 
@@ -39,8 +39,8 @@ class LimitEntry(Base):
     __tablename__ = "limit_entries"
 
     # can be either chat_id or user_id
-    object_id: Mapped[BigInteger] = mapped_column(BigInteger, primary_key=True)
-    start_time: Mapped[BigInteger] = mapped_column(BigInteger, nullable=False)
+    object_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    start_time: Mapped[int] = mapped_column(BigInteger, nullable=False)
     remain: Mapped[int] = mapped_column(nullable=False)
 
     def __repr__(self) -> str:

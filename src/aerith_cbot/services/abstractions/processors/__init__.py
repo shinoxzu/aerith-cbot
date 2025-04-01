@@ -1,4 +1,9 @@
-from .group import GroupMessageProcessor
-from .private import PrivateMessageProcessor
+from .chat import ChatProcessor
+from .group_message import GroupMessageProcessor
+from .private_message import PrivateMessageProcessor
 
-__all__ = ("GroupMessageProcessor", "PrivateMessageProcessor")
+__all__ = (
+    "GroupMessageProcessor",
+    "ChatProcessor",
+    "PrivateMessageProcessor",
+)

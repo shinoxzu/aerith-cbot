@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 
-from aiogram.types import Message
-
 
 class ToolCommand(ABC):
     @abstractmethod
-    async def execute(self, arguments: str, message: Message) -> str:
+    async def execute(self, arguments: str, chat_id: int) -> str:
         pass

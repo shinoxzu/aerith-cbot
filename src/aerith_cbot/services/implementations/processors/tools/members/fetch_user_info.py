@@ -1,0 +1,28 @@
+import logging
+
+from pydantic import BaseModel
+
+from aerith_cbot.services.abstractions import MemoryService
+
+from . import ToolCommand
+
+
+class FetchUserInfoParams(BaseModel):
+    user_id: int
+    query: str
+
+
+class FetchUserInfoToolCommand(ToolCommand):
+    def __init__(self, memory_service: MemoryService) -> None:
+        super().__init__()
+
+        self._memory_service = memory_service
+        self._logger = logging.getLogger(__name__)
+
+    async def execute(self, arguments: str, chat_id: int) -> str:
+        # fetch info about many users in one requets
+
+        params = FetchUserInfoParams.model_validate_json(arguments)
+        result = await self._memory_service.search(str(params.user_id), params.query)
+
+        return result or "Информация по запросу не найдена."

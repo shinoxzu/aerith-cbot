@@ -1,5 +1,9 @@
-from .openai_group import OpenAIGroupMessageProcessor
-from .openai_private import OpenAIPrivateMessageProcessor
-from .tools import ToolCommandDispatcher
+from .chat import DefaultChatProcessor
+from .group_message import DefaultGroupMessageProcessor
+from .private_message import DefaultPrivateMessageProcessor
 
-__all__ = ("OpenAIGroupMessageProcessor", "OpenAIPrivateMessageProcessor", "ToolCommandDispatcher")
+__all__ = (
+    "DefaultGroupMessageProcessor",
+    "DefaultChatProcessor",
+    "DefaultPrivateMessageProcessor",
+)

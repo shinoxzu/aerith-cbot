@@ -1,5 +1,7 @@
+from .chat import ChatType
 from .llm import ModelInputMessage, ModelInputUser, ModelResponse
 from .message import InputChat, InputMessage, InputUser
+from .search import SearchMessage
 from .stickers import StickerDTO
 
 __all__ = (
@@ -10,4 +12,6 @@ __all__ = (
     "InputUser",
     "InputChat",
     "InputMessage",
+    "SearchMessage",
+    "ChatType",
 )

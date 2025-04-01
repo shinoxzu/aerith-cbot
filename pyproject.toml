@@ -6,18 +6,18 @@ readme = "README.md"
 authors = [{ name = "shinoxzu", email = "shinoxzu@gmail.com" }]
 requires-python = ">=3.13"
 dependencies = [
-    "aiogram>=3.18.0",
-    "alembic>=1.14.1",
-    "asyncpg>=0.30.0",
-    "chatgpt-md-converter>=0.2.0",
-    "dishka>=1.4.2",
-    "greenlet>=3.1.1",
-    "mem0ai[graph]>=0.1.55",
-    "openai>=1.64.0",
-    "pydantic>=2.10.6",
-    "python-dotenv>=1.0.1",
-    "sqlalchemy>=2.0.38",
-    "uuid-utils>=0.10.0",
+    "aiogram>=3.18",
+    "alembic>=1.14",
+    "asyncpg>=0.30",
+    "chatgpt-md-converter>=0.2",
+    "dishka>=1.4",
+    "greenlet>=3.1",
+    "mem0ai>=0.1",
+    "openai>=1.64",
+    "pydantic>=2.10",
+    "python-dotenv>=1.0",
+    "sqlalchemy>=2.0",
+    "uuid-utils>=0.10",
 ]
 
 [project.scripts]

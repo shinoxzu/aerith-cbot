@@ -16,5 +16,7 @@ class InputMessage(BaseModel):
     chat: InputChat
     sender: InputUser
     reply_message: "InputMessage | None"
-    text: str
+    photo_url: str | None
+    text: str | None
     date: str
+    contains_aerith_mention: bool

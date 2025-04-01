@@ -3,7 +3,6 @@ import logging
 
 from aiogram import Bot
 from aiogram.enums import ParseMode
-from aiogram.types import Message
 from chatgpt_md_converter import telegram_format
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,13 +23,29 @@ class DefaultSenderService(SenderService):
         self._db_session = db_session
         self._logger = logging.getLogger(__name__)
 
-    async def send(self, message: Message, response: ModelResponse) -> None:
+    async def send(self, chat_id: int, response: ModelResponse) -> None:
+        reply_used = False
+
         if response.text or response.sticker:
-            await self._bot.send_chat_action(chat_id=message.chat.id, action="typing")
+            await self._bot.send_chat_action(chat_id=chat_id, action="typing")
 
             for text in response.text:
+                await self._bot.send_chat_action(chat_id=chat_id, action="typing")
+
+                # model sometime returns empty text string
+                formatted_text = telegram_format(text)
+                if not formatted_text:
+                    continue
+
+                await self._bot.send_message(
+                    chat_id,
+                    formatted_text,
+                    parse_mode=ParseMode.HTML,
+                    reply_to_message_id=response.reply_to_message_id if not reply_used else None,
+                )
+                reply_used = True
+
                 await asyncio.sleep(1)
-                await message.answer(telegram_format(text), parse_mode=ParseMode.HTML)
 
             if response.sticker is not None:
                 sticker_file_id = await self._stickers_service.search(response.sticker)
@@ -41,17 +56,39 @@ class DefaultSenderService(SenderService):
                         response.sticker,
                         sticker_file_id,
                     )
-                    await message.answer_sticker(sticker=sticker_file_id)
+                    await self._bot.send_sticker(
+                        chat_id,
+                        sticker_file_id,
+                        reply_to_message_id=response.reply_to_message_id
+                        if not reply_used
+                        else None,
+                    )
                 else:
                     self._logger.info(
                         "Cannot find sticker with emoji %s, sending text message instead",
                         response.sticker,
                     )
-                    await message.answer(response.sticker)
+                    await self._bot.send_message(
+                        chat_id,
+                        response.sticker,
+                        reply_to_message_id=response.reply_to_message_id
+                        if not reply_used
+                        else None,
+                    )
 
             await self._db_session.execute(
                 update(ChatState)
-                .where(ChatState.chat_id == message.chat.id)
+                .where(ChatState.chat_id == chat_id)
                 .values(listening_streak=0, ignoring_streak=0)
             )
             await self._db_session.commit()
+
+    async def send_refusal(self, chat_id: int, refusal: str) -> None:
+        await self._bot.send_message(chat_id, refusal)
+
+        await self._db_session.execute(
+            update(ChatState)
+            .where(ChatState.chat_id == chat_id)
+            .values(listening_streak=0, ignoring_streak=0)
+        )
+        await self._db_session.commit()

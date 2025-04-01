@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Bot
 from dishka import AsyncContainer, Provider, Scope, make_async_container
 from dishka.integrations.aiogram import AiogramProvider
@@ -5,39 +7,67 @@ from dishka.integrations.aiogram import AiogramProvider
 from aerith_cbot.config import Config
 from aerith_cbot.database import DataBaseProvider
 from aerith_cbot.services.abstractions import (
-    GroupMessageProcessor,
+    HistorySummarizer,
     MemoryService,
-    PrivateMessageProcessor,
+    MessageService,
     SenderService,
     StickersService,
 )
+from aerith_cbot.services.abstractions.processors import (
+    ChatProcessor,
+    GroupMessageProcessor,
+    PrivateMessageProcessor,
+)
 from aerith_cbot.services.implementations import (
+    ChatDispatcher,
     ClientsProvider,
     ConfigProvider,
+    DefaultMessageService,
     DefaultSenderService,
     DefaultStickersService,
+    GroupPermissionChecker,
     Mem0MemoryService,
-    OpenAIGroupMessageProcessor,
-    OpenAIPrivateMessageProcessor,
-    ToolCommandDispatcher,
+    OpenAIHistorySummarizer,
 )
+from aerith_cbot.services.implementations.message_queue import MessageQueue
+from aerith_cbot.services.implementations.processors import (
+    DefaultChatProcessor,
+    DefaultGroupMessageProcessor,
+    DefaultPrivateMessageProcessor,
+)
+from aerith_cbot.services.implementations.processors.tools import ToolCommandDispatcher
 
 
 async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
     service_provider = Provider(scope=Scope.REQUEST)
 
+    service_provider.provide(ChatDispatcher, scope=Scope.APP)
+    service_provider.provide(MessageQueue, scope=Scope.APP)
+    service_provider.provide(ToolCommandDispatcher)
+    service_provider.provide(GroupPermissionChecker)
+    service_provider.provide(OpenAIHistorySummarizer, provides=HistorySummarizer)
+    service_provider.provide(DefaultMessageService, provides=MessageService)
+    service_provider.provide(DefaultPrivateMessageProcessor, provides=PrivateMessageProcessor)
+    service_provider.provide(DefaultGroupMessageProcessor, provides=GroupMessageProcessor)
+    service_provider.provide(DefaultChatProcessor, provides=ChatProcessor)
     service_provider.provide(DefaultSenderService, provides=SenderService)
     service_provider.provide(DefaultStickersService, provides=StickersService)
-    service_provider.provide(OpenAIPrivateMessageProcessor, provides=PrivateMessageProcessor)
-    service_provider.provide(OpenAIGroupMessageProcessor, provides=GroupMessageProcessor)
     service_provider.provide(Mem0MemoryService, provides=MemoryService)
-    service_provider.provide(ToolCommandDispatcher)
     service_provider.provide(lambda: bot, scope=Scope.APP, provides=Bot)
 
-    return make_async_container(
+    container = make_async_container(
         service_provider,
         ConfigProvider(config),
         DataBaseProvider(),
         ClientsProvider(),
         AiogramProvider(),
     )
+
+    await _run_bg_workers(container)
+
+    return container
+
+
+async def _run_bg_workers(container: AsyncContainer) -> None:
+    chat_dispatcher = await container.get(ChatDispatcher)
+    chat_dispatcher.run_task = asyncio.create_task(chat_dispatcher.run())

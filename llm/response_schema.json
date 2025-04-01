@@ -15,10 +15,14 @@
         },
         "sticker": {
           "type": ["string", "null"],
-          "description": "An sticker response, can be null. Use this if you want to send a sticker. You must pass an EXACLTY one EMOJI here. Use this wisely."
+          "description": "An sticker response, can be null. Use this if you want to send a sticker. You must pass an EXACLTY one EMOJI here. DO NOT use rare emoji. Use this wisely."
+        },
+        "reply_to_message_id": {
+          "type": ["integer", "null"],
+          "description": "The message_id of a message the model wants to explicitly reply to. This should be set ONLY!!! if the referenced message is not the most recent one and there are other messages in between. Otherwise, leave it null!!!"
         }
       },
-      "required": ["text", "sticker"],
+      "required": ["text", "sticker", "reply_to_message_id"],
       "additionalProperties": false
     }
   }

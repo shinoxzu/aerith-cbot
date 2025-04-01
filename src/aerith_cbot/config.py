@@ -7,25 +7,18 @@ from pydantic import BaseModel
 class LLMConfig(BaseModel):
     response_schema: dict
     group_tools: list
-    private_tools: list
+    tools: list
     group_instruction: str
     private_instruction: str
+    summarize_instruction: str
 
 
 class OpenAIConfig(BaseModel):
     token: str
     model: str
-
-
-class ChromaConfig(BaseModel):
-    host: str
-    port: int
-
-
-class Neo4jConfig(BaseModel):
-    url: str
-    username: str
-    password: str
+    summarizer_model: str
+    memory_llm_model: str
+    memory_embedder_model: str
 
 
 class QdrantConfig(BaseModel):
@@ -48,7 +41,6 @@ class Config(BaseModel):
     db: DbConfig
     bot: BotConfig
     qdrant: QdrantConfig
-    neo4j: Neo4jConfig
     openai: OpenAIConfig
     llm: LLMConfig
 
@@ -66,22 +58,26 @@ def load_llm_config(path: str) -> LLMConfig:
     with open(path + "/response_schema.json", encoding="utf-8") as f:
         response_schema = json.loads(f.read())
 
-    with open(path + "/group_instruction.md", encoding="utf-8") as f:
+    with open(path + "/instructions/group_instruction.md", encoding="utf-8") as f:
         group_instruction = f.read()
 
-    with open(path + "/private_instruction.md", encoding="utf-8") as f:
+    with open(path + "/instructions/private_instruction.md", encoding="utf-8") as f:
         private_instruction = f.read()
 
-    with open(path + "/group_tools.json", encoding="utf-8") as f:
+    with open(path + "/instructions/summarize_instruction.md", encoding="utf-8") as f:
+        summarize_instruction = f.read()
+
+    with open(path + "/tools/group_tools.json", encoding="utf-8") as f:
         group_tools = json.loads(f.read())["tools"]
 
-    with open(path + "/private_tools.json", encoding="utf-8") as f:
-        private_tools = json.loads(f.read())["tools"]
+    with open(path + "/tools/tools.json", encoding="utf-8") as f:
+        tools = json.loads(f.read())["tools"]
 
     return LLMConfig(
         response_schema=response_schema,
         group_instruction=group_instruction,
         private_instruction=private_instruction,
         group_tools=group_tools,
-        private_tools=private_tools,
+        tools=tools,
+        summarize_instruction=summarize_instruction,
     )

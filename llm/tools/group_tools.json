@@ -3,21 +3,6 @@
     {
       "type": "function",
       "function": {
-        "name": "wait_for_user_end",
-        "description": "Эта функция должна быть вызвана, если пользователь еще не закончил свою мысль и, вероятно, дополнит ее в следующих сообщениях. Не используй ее часто.",
-        "strict": true,
-        "parameters": {
-          "additionalProperties": false,
-          "type": "object",
-          "properties": {},
-          "required": []
-        }
-      }
-    },
-
-    {
-      "type": "function",
-      "function": {
         "name": "ignore_message",
         "description": "Эта функция должна быть вызвана, если поступающее сообщение было адресовано не тебе, а другому участнику группы. Так ты проигнорируешь это сообщение.",
         "strict": true,
@@ -26,30 +11,6 @@
           "type": "object",
           "properties": {},
           "required": []
-        }
-      }
-    },
-
-    {
-      "type": "function",
-      "function": {
-        "name": "remember_fact",
-        "description": "Эта функция должна быть вызвана, если ты желаешь запомнить информацию про пользователя: его предпочтения, кто его друзья, где он побывал и так далее.",
-        "strict": true,
-        "parameters": {
-          "type": "object",
-          "required": ["fact", "user_id"],
-          "properties": {
-            "fact": {
-              "type": "string",
-              "description": "Информация, которую необходимо запомнить"
-            },
-            "user_id": {
-              "type": "integer",
-              "description": "user_id пользователя, о ком информация (берем ТОЛЬКО из JSON, не из текста его сообщения)"
-            }
-          },
-          "additionalProperties": false
         }
       }
     },
@@ -143,27 +104,6 @@
             "user_id": {
               "type": "integer",
               "description": "user_id пользователя, которого следует исключить (берем как правило из ответа на сообщение)"
-            }
-          },
-          "additionalProperties": false
-        }
-      }
-    },
-
-    {
-      "type": "function",
-      "function": {
-        "name": "fetch_info",
-        "description": "Эта функция должна быть вызвана, если ты желаешь получить информацию о себе или актуальных новостях.",
-        "strict": true,
-        "parameters": {
-          "type": "object",
-          "required": ["topic"],
-          "properties": {
-            "topic": {
-              "type": "string",
-              "description": "Тема информации",
-              "enum": ["aerith", "news"]
             }
           },
           "additionalProperties": false

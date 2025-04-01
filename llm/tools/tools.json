@@ -1,0 +1,91 @@
+{
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "wait_for_user_end",
+        "description": "Эта функция должна быть вызвана, если пользователь только не закончил свою мысль и пока не ждет ответа. Например: \"слушай...\", \"вот я думаю\", \"ща тебе кое-что расскажу\" и так далее.",
+        "strict": true,
+        "parameters": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    },
+    
+    {
+      "type": "function",
+      "function": {
+        "name": "remember_user_info",
+        "description": "Эта функция должна быть вызвана, если ты желаешь запомнить информацию о пользователе: его предпочтения, кто его друзья, где он побывал и так далее.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["info", "user_id"],
+          "properties": {
+            "info": {
+              "type": "string",
+              "description": "Информация, которую необходимо запомнить. Может быть много"
+            },
+            "user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, о ком информация (берем ТОЛЬКО из JSON, не из текста его сообщения)"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "fetch_user_info",
+        "description": "Эта функция должна быть вызвана, если ты желаешь вспомнить/получить информацию о пользователе. Например, узнать, какого цвета его ноутбук.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["query", "user_id"],
+          "properties": {
+            "user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, о ком информация (берем ТОЛЬКО из JSON, не из текста его сообщения)"
+            },
+            "query": {
+              "type": "string",
+              "description": "Что надо искать"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
+        "name": "fetch_info",
+        "description": "Эта функция должна быть вызвана, если ты желаешь вспомнить/получить информацию о себе или актуальных новостях. Например, если хочешь узнать, какого цвета у тебя волосы.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["topic", "query"],
+          "properties": {
+            "topic": {
+              "type": "string",
+              "description": "Тема информации",
+              "enum": ["aerith", "news"]
+            },
+            "query": {
+              "type": "string",
+              "description": "Что надо искать"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

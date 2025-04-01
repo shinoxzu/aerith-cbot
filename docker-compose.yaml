@@ -1,36 +1,19 @@
 services:
   bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
     command: sh -c ".venv/bin/alembic --config ${ALEMBIC_CONFIG_PATH} upgrade head && .venv/bin/bot"
     restart: unless-stopped
     depends_on:
-      neo4j:
-        condition: service_healthy
       db:
         condition: service_healthy
       qdrant:
         condition: service_healthy
-    build:
-      context: .
-      dockerfile: Dockerfile
     environment:
       - CONFIG_PATH=${BOT_CONFIG_PATH}
       - LLM_CONFIG_PATH=${LLM_CONFIG_PATH}
       - PYTHONUNBUFFERED=1
-  neo4j:
-    image: neo4j:latest
-    restart: unless-stopped
-    environment:
-      - NEO4J_AUTH=neo4j/secretpass
-      - NEO4J_PLUGINS=["apoc"]
-    volumes:
-      - neo4j-data:/data
-    ports:
-      - 7474:7474
-    healthcheck:
-      test: wget http://localhost:7474 || exit 1
-      interval: 1s
-      timeout: 10s
-      retries: 10
   qdrant:
     image: qdrant/qdrant:latest
     restart: unless-stopped
@@ -62,7 +45,6 @@ services:
       interval: 1s
       timeout: 10s
       retries: 10
-
 configs:
   qdrant_config:
     content: |
@@ -72,8 +54,6 @@ volumes:
   chroma-data:
     driver: local
   db-data:
-    driver: local
-  neo4j-data:
     driver: local
   qdrant-data:
     driver: local

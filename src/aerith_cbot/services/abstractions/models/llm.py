@@ -13,11 +13,12 @@ class ModelInputMessage(BaseModel):
 
     message_id: int
     sender: ModelInputUser
-    reply_message: typing.Optional["ModelInputMessage"]
-    text: str
+    reply_message: typing.Optional["ModelInputMessage"] = None
+    text: str | None = None
     date: str
 
 
 class ModelResponse(BaseModel):
     text: list[str]
     sticker: typing.Optional[str]
+    reply_to_message_id: typing.Optional[int]

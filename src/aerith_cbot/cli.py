@@ -3,6 +3,7 @@ import logging
 import os
 
 from aiogram import Bot, Dispatcher
+from aiogram.methods import DeleteWebhook
 from dishka.integrations.aiogram import setup_dishka
 
 from .config import load_config
@@ -28,6 +29,7 @@ async def main():
 
     dp.include_router(handlers_router)
 
+    await bot(DeleteWebhook(drop_pending_updates=True))
     await dp.start_polling(bot)
 
 

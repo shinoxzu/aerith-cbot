@@ -5,7 +5,6 @@ from aerith_cbot.config import (
     Config,
     DbConfig,
     LLMConfig,
-    Neo4jConfig,
     OpenAIConfig,
     QdrantConfig,
 )
@@ -27,10 +26,6 @@ class ConfigProvider(Provider):
     @provide(scope=Scope.APP)
     def bot_config(self) -> BotConfig:
         return self.config.bot
-
-    @provide(scope=Scope.APP)
-    def neo4j_config(self) -> Neo4jConfig:
-        return self.config.neo4j
 
     @provide(scope=Scope.APP)
     def qdrant_config(self) -> QdrantConfig:

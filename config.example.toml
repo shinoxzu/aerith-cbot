@@ -7,12 +7,11 @@ api_hash = "HASH"
 connection_string = "postgresql+asyncpg://root:root@db/aerith"
 
 [openai]
-token = "TOKEN"
-
-[neo4j]
-url = "neo4j://neo4j:7687"
-username = "neo4j"
-password = "secretpass"
+token="token"
+model = "gpt-4o-mini"
+summarizer_model = "gpt-4o-mini"
+memory_llm_model = "gpt-4o-mini"
+memory_embedder_model = "text-embedding-3-small"
 
 [qdrant]
 collection_name = "aerith"
