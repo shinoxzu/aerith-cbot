@@ -47,5 +47,7 @@ class MessageQueue:
         return ready_entries
 
     def clear(self, chat_id: int) -> None:
+        self._logger.debug("Clearing message_queue for chat %s", chat_id)
+
         if chat_id in self._local_entries:
             self._local_entries[chat_id].messages.clear()

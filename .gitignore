@@ -5,6 +5,9 @@ build/
 dist/
 wheels/
 *.egg-info
+.ropeproject
+.pytest_cache
+.ruff_cache
 
 # Virtual environments
 .venv

@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from aerith_cbot.services.abstractions import MessageService
 from aerith_cbot.services.abstractions.processors import ChatProcessor
-from aerith_cbot.services.implementations.message_queue import (
+
+from .message_queue import (
     LocalQueueEntry,
     MessageQueue,
 )

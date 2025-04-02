@@ -2,8 +2,10 @@ import logging
 
 from aiogram import Bot, exceptions
 
+from aerith_cbot.services.abstractions import PermissionChecker
 
-class GroupPermissionChecker:
+
+class GroupPermissionChecker(PermissionChecker):
     def __init__(self, bot: Bot) -> None:
         self._bot = bot
         self._logger = logging.getLogger(__name__)

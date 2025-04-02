@@ -53,7 +53,13 @@ class DefaultChatProcessor(ChatProcessor):
             max_iterations = DefaultChatProcessor.MAX_LLM_CALL_ITERATION
 
             while max_iterations > 0 and not tool_stop:
-                result = await self._get_llm_response(chat_id, old_messages + new_messages, tools)
+                result = await self._get_llm_response(
+                    chat_id,
+                    [{"role": "developer", "content": self._llm_config.group_instruction}]
+                    + old_messages
+                    + new_messages,
+                    tools,
+                )
 
                 self._logger.debug("LLM response in %s: %s", chat_id, result)
 
@@ -98,7 +104,7 @@ class DefaultChatProcessor(ChatProcessor):
 
     async def _process_llm_text_response(self, result: ChatCompletion, chat_id: int):
         if result.choices[0].message.refusal is not None:
-            self._logger.warn("Refusal in %s: %s", chat_id, result.choices[0].message.refusal)
+            self._logger.warning("Refusal in %s: %s", chat_id, result.choices[0].message.refusal)
 
             await self._sender_service.send_refusal(chat_id, result.choices[0].message.refusal)
 

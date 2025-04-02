@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot
 from pydantic import BaseModel
 
-from aerith_cbot.services.implementations import GroupPermissionChecker
+from aerith_cbot.services.abstractions import PermissionChecker
 
 from . import ToolCommand
 
@@ -14,11 +14,11 @@ class ChangeChatDescParams(BaseModel):
 
 
 class ChangeChatDescToolCommand(ToolCommand):
-    def __init__(self, bot: Bot, group_permission_checker: GroupPermissionChecker) -> None:
+    def __init__(self, bot: Bot, permission_checker: PermissionChecker) -> None:
         super().__init__()
 
         self._bot = bot
-        self._group_permission_checker = group_permission_checker
+        self._group_permission_checker = permission_checker
         self._logger = logging.getLogger(__name__)
 
     async def execute(self, arguments: str, chat_id: int) -> str:

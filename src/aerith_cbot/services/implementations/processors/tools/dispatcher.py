@@ -3,10 +3,9 @@ import logging
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerith_cbot.services.abstractions import MemoryService
-from aerith_cbot.services.implementations import GroupPermissionChecker
+from aerith_cbot.services.abstractions import MemoryService, PermissionChecker
 
-from .base import ToolCommand
+from .base import ToolCommand, ToolCommandDispatcher, ToolExecutionResult
 from .members import (
     ChangeChatDescToolCommand,
     ChangeChatNameToolCommand,
@@ -20,22 +19,13 @@ from .members import (
 )
 
 
-class ToolExecutionResult:
-    def __init__(self, response: str, stop: bool) -> None:
-        self.response = response
-        self.stop = stop
-
-    def __str__(self) -> str:
-        return f"ToolExecutionResult(response={self.response}, stop={self.stop})"
-
-
-class ToolCommandDispatcher:
+class DefaultToolCommandDispatcher(ToolCommandDispatcher):
     def __init__(
         self,
         bot: Bot,
         db_session: AsyncSession,
         memory_service: MemoryService,
-        group_permission_checker: GroupPermissionChecker,
+        permission_checker: PermissionChecker,
     ):
         self._tools: dict[str, ToolCommand] = {
             "ignore_message": IgnoreMessageToolCommand(db_session),
@@ -44,9 +34,9 @@ class ToolCommandDispatcher:
             "fetch_info": FetchInfoToolCommand(memory_service),
             "fetch_user_info": FetchUserInfoToolCommand(memory_service),
             "pin_message": PinMessageToolCommand(bot),
-            "change_chat_name": ChangeChatNameToolCommand(bot, group_permission_checker),
-            "change_chat_description": ChangeChatDescToolCommand(bot, group_permission_checker),
-            "kick_user": KickUserToolCommand(bot, group_permission_checker),
+            "change_chat_name": ChangeChatNameToolCommand(bot, permission_checker),
+            "change_chat_description": ChangeChatDescToolCommand(bot, permission_checker),
+            "kick_user": KickUserToolCommand(bot, permission_checker),
         }
         self._logger = logging.getLogger(__name__)
 

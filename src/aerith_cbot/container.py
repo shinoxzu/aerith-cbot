@@ -10,6 +10,7 @@ from aerith_cbot.services.abstractions import (
     HistorySummarizer,
     MemoryService,
     MessageService,
+    PermissionChecker,
     SenderService,
     StickersService,
 )
@@ -19,9 +20,6 @@ from aerith_cbot.services.abstractions.processors import (
     PrivateMessageProcessor,
 )
 from aerith_cbot.services.implementations import (
-    ChatDispatcher,
-    ClientsProvider,
-    ConfigProvider,
     DefaultMessageService,
     DefaultSenderService,
     DefaultStickersService,
@@ -29,13 +27,17 @@ from aerith_cbot.services.implementations import (
     Mem0MemoryService,
     OpenAIHistorySummarizer,
 )
-from aerith_cbot.services.implementations.message_queue import MessageQueue
+from aerith_cbot.services.implementations.chat_dispatcher import ChatDispatcher, MessageQueue
 from aerith_cbot.services.implementations.processors import (
     DefaultChatProcessor,
     DefaultGroupMessageProcessor,
     DefaultPrivateMessageProcessor,
 )
-from aerith_cbot.services.implementations.processors.tools import ToolCommandDispatcher
+from aerith_cbot.services.implementations.processors.tools import (
+    DefaultToolCommandDispatcher,
+    ToolCommandDispatcher,
+)
+from aerith_cbot.services.implementations.providers import ClientsProvider, ConfigProvider
 
 
 async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
@@ -43,8 +45,8 @@ async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
 
     service_provider.provide(ChatDispatcher, scope=Scope.APP)
     service_provider.provide(MessageQueue, scope=Scope.APP)
-    service_provider.provide(ToolCommandDispatcher)
-    service_provider.provide(GroupPermissionChecker)
+    service_provider.provide(DefaultToolCommandDispatcher, provides=ToolCommandDispatcher)
+    service_provider.provide(GroupPermissionChecker, provides=PermissionChecker)
     service_provider.provide(OpenAIHistorySummarizer, provides=HistorySummarizer)
     service_provider.provide(DefaultMessageService, provides=MessageService)
     service_provider.provide(DefaultPrivateMessageProcessor, provides=PrivateMessageProcessor)
