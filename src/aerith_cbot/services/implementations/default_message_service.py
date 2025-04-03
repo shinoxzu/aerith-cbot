@@ -22,13 +22,11 @@ class DefaultMessageService(MessageService):
         return [om.data for om in old_messages_raw.scalars()]
 
     async def add_messages(self, chat_id: int, messages: list[dict]) -> None:
-        # TODO: shorten chat
         self._db_session.add_all([Message(chat_id=chat_id, data=md) for md in messages])
         await self._db_session.commit()
 
     async def shorten_history(self, chat_id: int) -> None:
-        # we use offset 1 because we don't want to shorten instruction message
-        stmt = select(Message).where(Message.chat_id == chat_id).order_by(Message.id).offset(1)
+        stmt = select(Message).where(Message.chat_id == chat_id).order_by(Message.id)
         messages_raw = await self._db_session.execute(stmt)
         messages: list[Message] = list(messages_raw.scalars())
 
@@ -65,8 +63,7 @@ class DefaultMessageService(MessageService):
         await self._db_session.commit()
 
     async def shorten_full_history_without_media(self, chat_id: int) -> None:
-        # we use offset 1 because we don't want to shorten instruction message
-        stmt = select(Message).where(Message.chat_id == chat_id).order_by(Message.id).offset(1)
+        stmt = select(Message).where(Message.chat_id == chat_id).order_by(Message.id)
         messages_raw = await self._db_session.execute(stmt)
         messages_to_summarize: list[Message] = list(messages_raw.scalars())
 
