@@ -11,7 +11,7 @@
   },
   {
     "label": "Run formatter",
-    "command": "ruff format && ruff check --fix",
+    "command": "uv run ruff format && ruff check --fix",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "never",
