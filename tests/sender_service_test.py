@@ -40,8 +40,8 @@ async def test_send_text_message():
     mock_db_session.execute.assert_called_once()
     mock_db_session.commit.assert_called_once()
 
-    mock_bot.send_message.assert_called()
-    mock_bot.send_chat_action.assert_called()
+    assert mock_bot.send_message.call_count == 2
+    assert mock_bot.send_chat_action.call_count == 3
 
 
 @pytest.mark.asyncio
