@@ -12,7 +12,7 @@ from aerith_cbot.services.implementations.processors import (
 
 
 @pytest.mark.asyncio
-async def test_addding_chat_state_if_none(default_message_to_process: InputMessage):
+async def test_adding_chat_state_if_none(default_message_to_process: InputMessage):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(return_value=None)
     mock_db_session.add = MagicMock()

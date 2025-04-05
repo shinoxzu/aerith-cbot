@@ -40,3 +40,6 @@ line-length = 100
 
 [tool.ruff.lint]
 extend-select = ["I"]
+
+[tool.uv.workspace]
+members = ["venv"]
