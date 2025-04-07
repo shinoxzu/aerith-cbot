@@ -1,17 +1,32 @@
 [bot]
 token = "TOKEN"
-api_id = 123456789
-api_hash = "HASH"
 
 [db]
 connection_string = "postgresql+asyncpg://root:root@db/aerith"
 
 [openai]
-token="token"
+token="TOKEN"
 model = "gpt-4o-mini"
 summarizer_model = "gpt-4o-mini"
 memory_llm_model = "gpt-4o-mini"
 memory_embedder_model = "text-embedding-3-small"
+
+[limits]
+group_generic_tokens_limit=150_000
+group_cooldown=14_400
+group_per_user_tokens_limit=20_000
+group_per_support_user_tokens_limit=50_000
+group_per_user_max_other_usage_coeff=0.5
+private_tokens_limit=40_000
+private_support_tokens_limit=100_000
+private_cooldown=14_400
+max_context_tokens=70_000
+
+[support]
+price=299
+
+[yookassa]
+price=299
 
 [qdrant]
 collection_name = "aerith"
