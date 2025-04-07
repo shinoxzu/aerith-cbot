@@ -35,7 +35,7 @@ class OpenAIHistorySummarizer(HistorySummarizer):
             )
 
             if result.choices[0].message.refusal is not None:
-                self._logger.warn("Refusal in %s: %s", result.choices[0].message.refusal)
+                self._logger.warning("Refusal in %s: %s", result.choices[0].message.refusal)
 
             elif result.choices[0].message.content is not None:
                 content = result.choices[0].message.content

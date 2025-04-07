@@ -107,7 +107,7 @@ class DefaultLimitsService(LimitsService):
             chat_id, int(time.time()) - DefaultLimitsService.RECENTLY_ACTIVE_USERS_INTERVAL
         )
         if top_recent_user_limit_entry is None:
-            self._logger.warn("Cannot find any recent user in chat %s", chat_id)
+            self._logger.warning("Cannot find any recent user in chat %s", chat_id)
             return False
 
         # if there is no tokens in recently contacted users
@@ -118,7 +118,7 @@ class DefaultLimitsService(LimitsService):
                 chat_id, int(time.time()) - DefaultLimitsService.TOTAL_ACTIVE_USERS_INTERVAL
             )
             if top_tokens_user_limit_entry is None:
-                self._logger.warn("Cannot find any user in chat %s", chat_id)
+                self._logger.warning("Cannot find any user in chat %s", chat_id)
                 return False
 
             # we cant spend all of tokens for non-recently active user,
