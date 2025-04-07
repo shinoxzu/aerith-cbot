@@ -4,9 +4,12 @@ from aerith_cbot.config import (
     BotConfig,
     Config,
     DbConfig,
+    LimitsConfig,
     LLMConfig,
     OpenAIConfig,
     QdrantConfig,
+    SupportConfig,
+    YooKassaConfig,
 )
 
 
@@ -34,3 +37,15 @@ class ConfigProvider(Provider):
     @provide(scope=Scope.APP)
     def openai_config(self) -> OpenAIConfig:
         return self.config.openai
+
+    @provide(scope=Scope.APP)
+    def limits_config(self) -> LimitsConfig:
+        return self.config.limits
+
+    @provide(scope=Scope.APP)
+    def yookassa_config(self) -> YooKassaConfig:
+        return self.config.yookassa
+
+    @provide(scope=Scope.APP)
+    def support_config(self) -> SupportConfig:
+        return self.config.support

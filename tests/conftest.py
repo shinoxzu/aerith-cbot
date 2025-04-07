@@ -1,6 +1,6 @@
 import pytest
 
-from aerith_cbot.config import LLMConfig
+from aerith_cbot.config import LimitsConfig, LLMConfig
 from aerith_cbot.services.abstractions.models import InputChat, InputMessage, InputUser
 
 
@@ -27,4 +27,19 @@ def default_llm_config() -> LLMConfig:
         group_instruction="",
         private_instruction="",
         summarize_instruction="",
+    )
+
+
+@pytest.fixture
+def default_limits_config() -> LimitsConfig:
+    return LimitsConfig(
+        group_cooldown=1,
+        group_generic_tokens_limit=500,
+        group_per_user_tokens_limit=500,
+        group_per_user_max_other_usage_coeff=0.5,
+        private_cooldown=1,
+        private_tokens_limit=1,
+        max_context_tokens=1,
+        group_per_support_user_tokens_limit=1,
+        private_support_tokens_limit=1,
     )

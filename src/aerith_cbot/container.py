@@ -8,11 +8,13 @@ from aerith_cbot.config import Config
 from aerith_cbot.database import DataBaseProvider
 from aerith_cbot.services.abstractions import (
     HistorySummarizer,
+    LimitsService,
     MemoryService,
     MessageService,
     PermissionChecker,
     SenderService,
     StickersService,
+    SupportService,
 )
 from aerith_cbot.services.abstractions.processors import (
     ChatProcessor,
@@ -20,9 +22,11 @@ from aerith_cbot.services.abstractions.processors import (
     PrivateMessageProcessor,
 )
 from aerith_cbot.services.implementations import (
+    DefaultLimitsService,
     DefaultMessageService,
     DefaultSenderService,
     DefaultStickersService,
+    DefaultSupportService,
     GroupPermissionChecker,
     Mem0MemoryService,
     OpenAIHistorySummarizer,
@@ -45,6 +49,8 @@ async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
 
     service_provider.provide(ChatDispatcher, scope=Scope.APP)
     service_provider.provide(MessageQueue, scope=Scope.APP)
+    service_provider.provide(DefaultSupportService, provides=SupportService)
+    service_provider.provide(DefaultLimitsService, provides=LimitsService)
     service_provider.provide(DefaultToolCommandDispatcher, provides=ToolCommandDispatcher)
     service_provider.provide(GroupPermissionChecker, provides=PermissionChecker)
     service_provider.provide(OpenAIHistorySummarizer, provides=HistorySummarizer)

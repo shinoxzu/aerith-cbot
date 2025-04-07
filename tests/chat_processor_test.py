@@ -7,13 +7,15 @@ from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage, ChatCompletionMessageToolCall
 from openai.types.chat.chat_completion_message_tool_call_param import Function
 
+from aerith_cbot.config import LimitsConfig
 from aerith_cbot.services.abstractions.models import ChatType
-from aerith_cbot.services.implementations.processors.chat import DefaultChatProcessor
+from aerith_cbot.services.implementations import DefaultLimitsService
+from aerith_cbot.services.implementations.processors import DefaultChatProcessor
 from aerith_cbot.services.implementations.processors.tools import ToolExecutionResult
 
 
 @pytest.fixture
-def mock_dependencies():
+def mock_dependencies(default_limits_config: LimitsConfig):
     mock_openai_client = MagicMock()
     mock_openai_client.chat.completions.create = AsyncMock()
 
@@ -39,6 +41,10 @@ def mock_dependencies():
     mock_message_service.shorten_history = AsyncMock()
     mock_message_service.shorten_full_history_without_media = AsyncMock()
 
+    mock_limits_service = MagicMock(spec=DefaultLimitsService)
+    mock_limits_service.subtract_private_tokens = MagicMock()
+    mock_limits_service.subtract_group_tokens = MagicMock()
+
     return {
         "openai_client": mock_openai_client,
         "llm_config": mock_llm_config,
@@ -46,6 +52,8 @@ def mock_dependencies():
         "tool_dispatcher": mock_tool_dispatcher,
         "sender_service": mock_sender_service,
         "message_service": mock_message_service,
+        "limits_serivce": mock_limits_service,
+        "limits_config": default_limits_config,
     }
 
 
@@ -70,6 +78,7 @@ def mock_chat_completion():
     mock_completion.usage.prompt_tokens = 100
     mock_completion.usage.completion_tokens = 50
     mock_completion.usage.total_tokens = 150
+    mock_completion.usage.prompt_tokens_details = None
 
     return mock_completion
 
@@ -86,6 +95,8 @@ async def test_basic_chat_processing(mock_dependencies, mock_chat_completion):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -114,6 +125,8 @@ async def test_group_chat_uses_group_tools(mock_dependencies, mock_chat_completi
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.group)
@@ -150,6 +163,8 @@ async def test_processing_with_refusal(mock_dependencies):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -210,6 +225,8 @@ async def test_processing_with_tool_calls(mock_dependencies, mock_chat_completio
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -288,6 +305,8 @@ async def test_tool_stops_processing(mock_dependencies):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -322,6 +341,8 @@ async def test_validation_error_handling(mock_dependencies):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -350,13 +371,18 @@ async def test_rate_limit_retry(mock_dependencies, mock_chat_completion):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
 
     assert deps["openai_client"].chat.completions.create.call_count == 2
 
-    deps["message_service"].shorten_history.assert_called_once_with(123)
+    # call in _get_llm_response and main loop
+    deps["message_service"].shorten_history.assert_called_with(123)
+    assert deps["message_service"].shorten_history.call_count == 2
+
     deps["sender_service"].send.assert_called_once()
 
 
@@ -375,6 +401,8 @@ async def test_api_error_retry(mock_dependencies, mock_chat_completion):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -389,7 +417,7 @@ async def test_api_error_retry(mock_dependencies, mock_chat_completion):
 async def test_max_token_usage_triggers_shortening(mock_dependencies, mock_chat_completion):
     deps = mock_dependencies
 
-    mock_chat_completion.usage.prompt_tokens = DefaultChatProcessor.MAX_TOKEN_USAGE_PER_CHAT + 100
+    mock_chat_completion.usage.prompt_tokens = deps["limits_config"].max_context_tokens + 100
     deps["openai_client"].chat.completions.create.return_value = mock_chat_completion
 
     processor = DefaultChatProcessor(
@@ -399,6 +427,8 @@ async def test_max_token_usage_triggers_shortening(mock_dependencies, mock_chat_
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -458,6 +488,8 @@ async def test_max_iterations_limit(mock_dependencies):
             deps["tool_dispatcher"],
             deps["sender_service"],
             deps["message_service"],
+            deps["limits_serivce"],
+            deps["limits_config"],
         )
 
         await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -513,6 +545,8 @@ async def test_exception_in_tool_execution(mock_dependencies):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -542,6 +576,8 @@ async def test_exception_in_sender_service(mock_dependencies, mock_chat_completi
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -565,6 +601,8 @@ async def test_retry_limit_exceeded(mock_dependencies):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -599,6 +637,8 @@ async def test_no_choices_in_completion(mock_dependencies):
         deps["tool_dispatcher"],
         deps["sender_service"],
         deps["message_service"],
+        deps["limits_serivce"],
+        deps["limits_config"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)

@@ -4,13 +4,12 @@ import tomllib
 from pydantic import BaseModel
 
 
-class LLMConfig(BaseModel):
-    response_schema: dict
-    group_tools: list
-    tools: list
-    group_instruction: str
-    private_instruction: str
-    summarize_instruction: str
+class BotConfig(BaseModel):
+    token: str
+
+
+class DbConfig(BaseModel):
+    connection_string: str
 
 
 class OpenAIConfig(BaseModel):
@@ -21,27 +20,53 @@ class OpenAIConfig(BaseModel):
     memory_embedder_model: str
 
 
+class LimitsConfig(BaseModel):
+    # лимиты на группу
+    group_cooldown: int
+    group_generic_tokens_limit: int
+    group_per_user_tokens_limit: int
+    group_per_support_user_tokens_limit: int
+    group_per_user_max_other_usage_coeff: float
+
+    # лимиты на ЛС
+    private_cooldown: int
+    private_tokens_limit: int
+    private_support_tokens_limit: int
+
+    max_context_tokens: int
+
+
+class SupportConfig(BaseModel):
+    price: int
+
+
+class YooKassaConfig(BaseModel):
+    price: int
+
+
 class QdrantConfig(BaseModel):
     collection_name: str
     host: str
     port: int
 
 
-class DbConfig(BaseModel):
-    connection_string: str
-
-
-class BotConfig(BaseModel):
-    token: str
-    api_id: int
-    api_hash: str
+class LLMConfig(BaseModel):
+    response_schema: dict
+    group_tools: list
+    tools: list
+    group_instruction: str
+    private_instruction: str
+    summarize_instruction: str
 
 
 class Config(BaseModel):
-    db: DbConfig
     bot: BotConfig
-    qdrant: QdrantConfig
+    db: DbConfig
     openai: OpenAIConfig
+    limits: LimitsConfig
+    support: SupportConfig
+    yookassa: YooKassaConfig
+    qdrant: QdrantConfig
     llm: LLMConfig
 
 

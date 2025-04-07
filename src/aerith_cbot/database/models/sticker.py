@@ -18,4 +18,4 @@ class Sticker(Base):
         id={self.id}, \
         file_id={self.file_id}, \
         emoji={self.emoji}, \
-        set={self.set_name})"
+        set_name={self.set_name})"

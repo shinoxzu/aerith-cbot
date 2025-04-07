@@ -15,7 +15,7 @@ async def main():
     config = load_config(os.environ["CONFIG_PATH"], os.environ["LLM_CONFIG_PATH"])
 
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
         force=True,
         encoding="utf-8",

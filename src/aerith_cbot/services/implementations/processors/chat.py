@@ -4,8 +4,8 @@ from openai import APIError, AsyncOpenAI, RateLimitError
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 from pydantic import ValidationError
 
-from aerith_cbot.config import LLMConfig, OpenAIConfig
-from aerith_cbot.services.abstractions import MessageService, SenderService
+from aerith_cbot.config import LimitsConfig, LLMConfig, OpenAIConfig
+from aerith_cbot.services.abstractions import LimitsService, MessageService, SenderService
 from aerith_cbot.services.abstractions.models import (
     ChatType,
     ModelResponse,
@@ -17,7 +17,6 @@ from aerith_cbot.services.implementations.processors.tools import ToolCommandDis
 class DefaultChatProcessor(ChatProcessor):
     MAX_LLM_CALL_ATTEMPTS = 3
     MAX_LLM_CALL_ITERATION = 10
-    MAX_TOKEN_USAGE_PER_CHAT = 20_000
 
     def __init__(
         self,
@@ -27,6 +26,8 @@ class DefaultChatProcessor(ChatProcessor):
         tool_command_dispatcher: ToolCommandDispatcher,
         sender_service: SenderService,
         message_service: MessageService,
+        limits_service: LimitsService,
+        limits_config: LimitsConfig,
     ) -> None:
         super().__init__()
 
@@ -37,6 +38,8 @@ class DefaultChatProcessor(ChatProcessor):
         self._tool_command_dispatcher = tool_command_dispatcher
         self._sender_service = sender_service
         self._message_service = message_service
+        self._limits_config = limits_config
+        self._limits_service = limits_service
 
     async def process(self, chat_id: int, chat_type: ChatType) -> None:
         old_messages: list[dict] = await self._message_service.fetch_messages(chat_id)
@@ -92,13 +95,52 @@ class DefaultChatProcessor(ChatProcessor):
             await self._message_service.add_messages(chat_id, new_messages)
 
             if result is not None:
-                self._logger.info("Current usage in %s is: %s", chat_id, result.usage)
+                if result.usage is not None:
+                    self._logger.debug(
+                        "Usage in chat %s (%s): %s", chat_id, chat_type.name, result.usage
+                    )
 
-                if (
-                    result.usage is not None
-                    and result.usage.prompt_tokens > DefaultChatProcessor.MAX_TOKEN_USAGE_PER_CHAT
-                ):
-                    await self._message_service.shorten_history(chat_id)
+                    if result.usage.total_tokens > self._limits_config.max_context_tokens:
+                        self._logger.info(
+                            "Usage in chat %s (%s) above limit (%s>%s); shortening history",
+                            chat_id,
+                            chat_type,
+                            result.usage.total_tokens,
+                            self._limits_config.max_context_tokens,
+                        )
+                        await self._message_service.shorten_history(chat_id)
+
+                    # we will always get details in response, but in case of
+                    # some errors we will count tokens in the other way
+                    if (
+                        result.usage.prompt_tokens_details is not None
+                        and result.usage.prompt_tokens_details.cached_tokens is not None
+                    ):
+                        new_prompt_tokens = (
+                            result.usage.prompt_tokens
+                            - result.usage.prompt_tokens_details.cached_tokens
+                        )
+                        tokens_to_subtract = new_prompt_tokens + result.usage.completion_tokens
+                    else:
+                        tokens_to_subtract = (
+                            result.usage.completion_tokens + result.usage.prompt_tokens // 2
+                        )
+
+                    self._logger.info(
+                        "Chat %s (%s) has used %s tokens in this request",
+                        chat_id,
+                        chat_type,
+                        tokens_to_subtract,
+                    )
+
+                    if chat_type == ChatType.group:
+                        await self._limits_service.subtract_group_tokens(
+                            chat_id, tokens_to_subtract
+                        )
+                    elif chat_type == ChatType.private:
+                        await self._limits_service.subtract_private_tokens(
+                            chat_id, tokens_to_subtract
+                        )
         except Exception as e:
             self._logger.error("Cannot process chat %s cause of %s", chat_id, e, exc_info=e)
 
@@ -189,7 +231,6 @@ class DefaultChatProcessor(ChatProcessor):
                     err,
                     exc_info=err,
                 )
-
                 await self._message_service.shorten_history(chat_id)
             except APIError as err:
                 last_error = err
@@ -198,7 +239,6 @@ class DefaultChatProcessor(ChatProcessor):
                     err,
                     exc_info=err,
                 )
-                # TOOD: ?
                 await self._message_service.shorten_full_history_without_media(chat_id)
             finally:
                 attempts += 1

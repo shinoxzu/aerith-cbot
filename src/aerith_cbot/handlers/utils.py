@@ -11,6 +11,9 @@ utils_router = Router()
 logger = logging.getLogger(__name__)
 
 
+# TODO: add authorization for this command
+
+
 @utils_router.message(Command("sload"))
 async def private_message_handler(
     message: types.Message,

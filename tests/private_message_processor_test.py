@@ -3,8 +3,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerith_cbot.config import LimitsConfig
 from aerith_cbot.database.models import ChatState
 from aerith_cbot.services.abstractions.models import InputMessage
+from aerith_cbot.services.implementations import DefaultLimitsService
 from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
 from aerith_cbot.services.implementations.processors.private_message import (
     DefaultPrivateMessageProcessor,
@@ -12,28 +14,18 @@ from aerith_cbot.services.implementations.processors.private_message import (
 
 
 @pytest.mark.asyncio
-async def test_addding_chat_state_if_none(default_message_to_process: InputMessage):
-    mock_db_session = MagicMock(spec=AsyncSession)
-    mock_db_session.get = AsyncMock(return_value=None)
-    mock_db_session.add = MagicMock()
-    mock_db_session.commit = AsyncMock()
-
-    private_message_processor = DefaultPrivateMessageProcessor(
-        db_session=mock_db_session,
-        message_queue=MessageQueue(),
-    )
-
-    await private_message_processor.process(default_message_to_process)
-
-    mock_db_session.add.assert_called_once()
-    mock_db_session.commit.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_adding_message_to_queue(default_message_to_process: InputMessage):
+async def test_sleeping_chat_ignore(
+    default_message_to_process: InputMessage, default_limits_config: LimitsConfig
+):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(
-        return_value=ChatState(chat_id=1, is_focused=False, ignoring_streak=0, listening_streak=0)
+        return_value=ChatState(
+            chat_id=1,
+            is_focused=False,
+            ignoring_streak=0,
+            listening_streak=0,
+            sleeping_till=1000000000000000,
+        )
     )
     mock_db_session.add = MagicMock()
     mock_db_session.commit = AsyncMock()
@@ -41,9 +33,71 @@ async def test_adding_message_to_queue(default_message_to_process: InputMessage)
     mock_message_queue = MagicMock(spec=MessageQueue)
     mock_message_queue.add = MagicMock()
 
+    mock_limits_service = MagicMock(spec=DefaultLimitsService)
+    mock_limits_service.check_private_limit = AsyncMock(return_value=True)
+
     private_message_processor = DefaultPrivateMessageProcessor(
         db_session=mock_db_session,
         message_queue=mock_message_queue,
+        limits_config=default_limits_config,
+        limits_service=mock_limits_service,
+    )
+
+    await private_message_processor.process(default_message_to_process)
+
+    mock_limits_service.check_private_limit.assert_not_called()
+    mock_message_queue.add.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_addding_chat_state_if_none(
+    default_message_to_process: InputMessage, default_limits_config: LimitsConfig
+):
+    mock_db_session = MagicMock(spec=AsyncSession)
+    mock_db_session.get = AsyncMock(return_value=None)
+    mock_db_session.add = MagicMock()
+    mock_db_session.commit = AsyncMock()
+
+    mock_limits_service = MagicMock(spec=DefaultLimitsService)
+    mock_limits_service.check_private_limit = AsyncMock(return_value=False)
+
+    private_message_processor = DefaultPrivateMessageProcessor(
+        db_session=mock_db_session,
+        message_queue=MessageQueue(),
+        limits_config=default_limits_config,
+        limits_service=mock_limits_service,
+    )
+
+    await private_message_processor.process(default_message_to_process)
+
+    mock_db_session.add.assert_called_once()
+    assert mock_db_session.commit.call_count == 2  # adding chat_state + commiting sleeping_till
+
+
+@pytest.mark.asyncio
+async def test_adding_message_to_queue(
+    default_message_to_process: InputMessage, default_limits_config: LimitsConfig
+):
+    mock_db_session = MagicMock(spec=AsyncSession)
+    mock_db_session.get = AsyncMock(
+        return_value=ChatState(
+            chat_id=1, is_focused=False, ignoring_streak=0, listening_streak=0, sleeping_till=0
+        )
+    )
+    mock_db_session.add = MagicMock()
+    mock_db_session.commit = AsyncMock()
+
+    mock_message_queue = MagicMock(spec=MessageQueue)
+    mock_message_queue.add = MagicMock()
+
+    mock_limits_service = MagicMock(spec=DefaultLimitsService)
+    mock_limits_service.check_private_limit = AsyncMock(return_value=False)
+
+    private_message_processor = DefaultPrivateMessageProcessor(
+        db_session=mock_db_session,
+        message_queue=mock_message_queue,
+        limits_config=default_limits_config,
+        limits_service=mock_limits_service,
     )
 
     await private_message_processor.process(default_message_to_process)
