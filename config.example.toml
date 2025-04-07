@@ -27,6 +27,7 @@ price=299
 
 [yookassa]
 price=299
+provider_token="TOKEN"
 
 [qdrant]
 collection_name = "aerith"

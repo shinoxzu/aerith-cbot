@@ -17,3 +17,7 @@ class MessageService(ABC):
     @abstractmethod
     async def shorten_full_history_without_media(self, chat_id: int) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def clear(self, chat_id: int) -> None:
+        raise NotImplementedError

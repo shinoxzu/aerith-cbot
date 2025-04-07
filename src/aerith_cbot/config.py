@@ -42,6 +42,7 @@ class SupportConfig(BaseModel):
 
 class YooKassaConfig(BaseModel):
     price: int
+    provider_token: str
 
 
 class QdrantConfig(BaseModel):

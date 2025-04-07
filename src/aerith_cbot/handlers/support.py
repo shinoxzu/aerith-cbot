@@ -5,7 +5,7 @@ from aiogram import F, Router, types
 from aiogram.filters import Command
 from dishka import FromDishka
 
-from aerith_cbot.config import SupportConfig
+from aerith_cbot.config import SupportConfig, YooKassaConfig
 from aerith_cbot.filters import ChatTypeFilter
 from aerith_cbot.services.abstractions import SupportService
 
@@ -25,6 +25,7 @@ async def private_message_handler(
     message: types.Message,
     support_service: FromDishka[SupportService],
     support_config: FromDishka[SupportConfig],
+    yookassa_config: FromDishka[YooKassaConfig]
 ):
     if message.from_user is None:
         return
@@ -43,7 +44,7 @@ async def private_message_handler(
             currency="RUB",
             prices=[types.LabeledPrice(label="Поддержка", amount=support_config.price * 100)],
             start_parameter="support",
-            provider_token="1744374395:TEST:d725ee2fa45592ee8b1a"
+            provider_token=yookassa_config.provider_token,
         )
     else:
         end_date = time.strftime("%d.%m.%Y", time.gmtime(user_supporter.end_timestamp))

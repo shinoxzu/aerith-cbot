@@ -476,9 +476,9 @@ async def test_max_iterations_limit(mock_dependencies):
         stop=False,
     )
 
-    original_max_iterations = DefaultChatProcessor.MAX_LLM_CALL_ITERATION
+    original_max_iterations = DefaultChatProcessor.MAX_LLM_CALL_ITERATIONS
 
-    DefaultChatProcessor.MAX_LLM_CALL_ITERATION = 3  # type: ignore
+    DefaultChatProcessor.MAX_LLM_CALL_ITERATIONS = 3  # type: ignore
 
     try:
         processor = DefaultChatProcessor(
@@ -497,7 +497,7 @@ async def test_max_iterations_limit(mock_dependencies):
         assert deps["openai_client"].chat.completions.create.call_count == 3
         assert deps["tool_dispatcher"].execute_tool.call_count == 3
     finally:
-        DefaultChatProcessor.MAX_LLM_CALL_ITERATION = original_max_iterations
+        DefaultChatProcessor.MAX_LLM_CALL_ITERATIONS = original_max_iterations
 
 
 @pytest.mark.asyncio

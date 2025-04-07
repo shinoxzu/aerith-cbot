@@ -97,3 +97,8 @@ class DefaultMessageService(MessageService):
         await self._db_session.execute(stmt)
 
         await self._db_session.commit()
+
+    async def clear(self, chat_id: int) -> None:
+        stmt = delete(Message).where(Message.chat_id == chat_id)
+        await self._db_session.execute(stmt)
+        await self._db_session.commit()

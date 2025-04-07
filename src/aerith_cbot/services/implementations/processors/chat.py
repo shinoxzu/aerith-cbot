@@ -16,7 +16,8 @@ from aerith_cbot.services.implementations.processors.tools import ToolCommandDis
 
 class DefaultChatProcessor(ChatProcessor):
     MAX_LLM_CALL_ATTEMPTS = 3
-    MAX_LLM_CALL_ITERATION = 10
+    MAX_LLM_CALL_ITERATIONS = 10
+    MAX_TOOL_CALL_ITERATIONS = 10
 
     def __init__(
         self,
@@ -53,9 +54,12 @@ class DefaultChatProcessor(ChatProcessor):
 
             tool_stop = False
             result = None
-            max_iterations = DefaultChatProcessor.MAX_LLM_CALL_ITERATION
+            current_iterations = 0
+            current_tool_calls = 0
 
-            while max_iterations > 0 and not tool_stop:
+            while (
+                current_iterations < DefaultChatProcessor.MAX_LLM_CALL_ITERATIONS and not tool_stop
+            ):
                 result = await self._get_llm_response(
                     chat_id,
                     [{"role": "developer", "content": self._llm_config.group_instruction}]
@@ -78,6 +82,13 @@ class DefaultChatProcessor(ChatProcessor):
                 if not result.choices[0].message.tool_calls:
                     break
 
+                self._logger.info(
+                    "Tool calls to call in %s (total: %s): %s",
+                    chat_id,
+                    len(result.choices[0].message.tool_calls),
+                    result.choices[0].message.tool_calls,
+                )
+
                 # call all functions in one response
                 for tool_call in result.choices[0].message.tool_calls:
                     tool_response, tool_stop = await self._process_llm_tool_call(chat_id, tool_call)
@@ -90,7 +101,18 @@ class DefaultChatProcessor(ChatProcessor):
                         },
                     )
 
-                max_iterations -= 1
+                    current_tool_calls += 1
+
+                    if current_tool_calls >= DefaultChatProcessor.MAX_TOOL_CALL_ITERATIONS:
+                        current_iterations = DefaultChatProcessor.MAX_LLM_CALL_ITERATIONS
+
+                        self._logger.warning(
+                            "Tool call limit in %s (last_call: %s)", chat_id, tool_call
+                        )
+
+                        break
+
+                current_iterations += 1
 
             await self._message_service.add_messages(chat_id, new_messages)
 
@@ -223,7 +245,7 @@ class DefaultChatProcessor(ChatProcessor):
                     tools=tools,
                     messages=messages,  # type: ignore
                     response_format=self._llm_config.response_schema,  # type: ignore
-                    store=True
+                    store=True,
                 )
             except RateLimitError as err:
                 last_error = err
