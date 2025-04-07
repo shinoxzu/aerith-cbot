@@ -30,7 +30,10 @@ class Mem0MemoryService(MemoryService):
             self._memory.search, query=query, user_id=object_id, limit=3
         )
 
-        if result_data is None or (not result_data["results"] and not result_data["relations"]):
+        if result_data is None or (
+            not ("relations" not in result_data or result_data["results"])
+            and ("relations" not in result_data or not result_data["relations"])
+        ):
             return None
 
         result = ""

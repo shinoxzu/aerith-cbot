@@ -223,6 +223,7 @@ class DefaultChatProcessor(ChatProcessor):
                     tools=tools,
                     messages=messages,  # type: ignore
                     response_format=self._llm_config.response_schema,  # type: ignore
+                    store=True
                 )
             except RateLimitError as err:
                 last_error = err

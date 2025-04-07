@@ -33,11 +33,17 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
         # if chat is inactive for now cause of limits
         if chat_state.sleeping_till > int(time.time()):
-            self._logger.info("Ignoring message cause sleeping from chat: %s", message.chat)
+            self._logger.info(
+                "Ignoring message cause sleeping (to %s) from chat: %s",
+                chat_state.sleeping_till,
+                message.chat,
+            )
 
             # TODO: send message "я занята, так что давай позже..."
 
             return
+
+        new_messages: list[dict] = []
 
         can_use = await self._limits_service.check_group_limit(message.sender.id, message.chat.id)
 
@@ -62,10 +68,18 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                 chat_state.is_focused = True
 
                 await self._db_session.commit()
+
+                new_messages.append(
+                    {
+                        "role": "system",
+                        "content": (
+                            "Тебя упомянули в группе. "
+                            "Пользователи хотят пообщаться, обязательно напиши им!"
+                        ),
+                    }
+                )
             else:
                 return
-
-        new_messages = []
 
         # if there are no tokens available, we say goodbye to the user
         # also we make chat inactive by setting sleeping_till property
@@ -77,14 +91,12 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
             await self._db_session.commit()
 
-            new_messages: list[dict] = [
+            new_messages.append(
                 {
                     "role": "system",
                     "content": "В группе лимит на общение с тобой. Извинись и сообщи, что тебе пора.",
                 }
-            ]
-        else:
-            new_messages: list[dict] = []
+            )
 
         content = []
         if message.photo_url is not None:
