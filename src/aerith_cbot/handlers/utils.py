@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # TODO: add authorization for this command
 
 
-@utils_router.message(Command("sload"), AdminFilter)
+@utils_router.message(Command("sload"), AdminFilter())
 async def private_message_handler(
     message: types.Message,
     stickers_service: FromDishka[StickersService],
@@ -24,7 +24,7 @@ async def private_message_handler(
 ):
     if message.reply_to_message is not None and message.reply_to_message.sticker is not None:
         if message.reply_to_message.sticker.set_name is None:
-            return await message.answer("это стикер не из сета :(")
+            return await message.answer("этот стикер не из сета :(")
 
         set_name = message.reply_to_message.sticker.set_name
     elif command.args is not None:
