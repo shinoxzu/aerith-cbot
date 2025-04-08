@@ -4,7 +4,7 @@ from aiogram import Bot, Router, exceptions, types
 from aiogram.filters import Command, CommandObject
 from dishka import FromDishka
 
-from aerith_cbot.filters.admin import AdminFilter
+from aerith_cbot.config import BotConfig
 from aerith_cbot.services.abstractions import StickersService
 from aerith_cbot.services.abstractions.models import StickerDTO
 
@@ -15,13 +15,17 @@ logger = logging.getLogger(__name__)
 # TODO: add authorization for this command
 
 
-@utils_router.message(Command("sload"), AdminFilter())
+@utils_router.message(Command("sload"))
 async def private_message_handler(
     message: types.Message,
     stickers_service: FromDishka[StickersService],
+    bot_config: FromDishka[BotConfig],
     bot: Bot,
     command: CommandObject,
 ):
+    if message.from_user and message.from_user.id not in bot_config.admin_ids:
+        return
+
     if message.reply_to_message is not None and message.reply_to_message.sticker is not None:
         if message.reply_to_message.sticker.set_name is None:
             return await message.answer("этот стикер не из сета :(")
