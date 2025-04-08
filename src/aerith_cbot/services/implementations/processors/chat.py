@@ -48,9 +48,15 @@ class DefaultChatProcessor(ChatProcessor):
 
         try:
             if chat_type == ChatType.group:
-                tools = self._llm_config.group_tools + self._llm_config.tools
+                tools = self._llm_config.tools + self._llm_config.group_tools
+                instruction_messages = [
+                    {"role": "developer", "content": self._llm_config.group_instruction}
+                ]
             elif chat_type == ChatType.private:
                 tools = self._llm_config.tools
+                instruction_messages = [
+                    {"role": "developer", "content": self._llm_config.private_instruction}
+                ]
 
             tool_stop = False
             result = None
@@ -62,9 +68,7 @@ class DefaultChatProcessor(ChatProcessor):
             ):
                 result = await self._get_llm_response(
                     chat_id,
-                    [{"role": "developer", "content": self._llm_config.group_instruction}]
-                    + old_messages
-                    + new_messages,
+                    instruction_messages + old_messages + new_messages,
                     tools,
                 )
 
