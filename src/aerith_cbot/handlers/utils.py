@@ -4,6 +4,7 @@ from aiogram import Bot, Router, exceptions, types
 from aiogram.filters import Command, CommandObject
 from dishka import FromDishka
 
+from aerith_cbot.filters.admin import AdminFilter
 from aerith_cbot.services.abstractions import StickersService
 from aerith_cbot.services.abstractions.models import StickerDTO
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 # TODO: add authorization for this command
 
 
-@utils_router.message(Command("sload"))
+@utils_router.message(Command("sload"), AdminFilter)
 async def private_message_handler(
     message: types.Message,
     stickers_service: FromDishka[StickersService],

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class BotConfig(BaseModel):
     token: str
+    admin_ids: list[int]
 
 
 class DbConfig(BaseModel):
