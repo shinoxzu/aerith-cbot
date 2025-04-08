@@ -4,6 +4,7 @@ import logging
 # from langchain_core._api.deprecation import LangChainDeprecationWarning
 from mem0 import Memory
 
+from aerith_cbot.config import LLMConfig
 from aerith_cbot.services.abstractions import MemoryService
 from aerith_cbot.services.abstractions.models import SearchMessage
 
@@ -15,11 +16,12 @@ from aerith_cbot.services.abstractions.models import SearchMessage
 class Mem0MemoryService(MemoryService):
     MIN_SCORE = 0.2
 
-    def __init__(self, memory: Memory) -> None:
+    def __init__(self, memory: Memory, llm_config: LLMConfig) -> None:
         super().__init__()
 
         self._memory = memory
         self._logger = logging.getLogger(__name__)
+        self._llm_config = llm_config
 
     async def remember(self, object_id: str, fact: str) -> None:
         self._logger.info("Remembering in %s: %s", object_id, fact)
@@ -59,9 +61,7 @@ class Mem0MemoryService(MemoryService):
                 search_results_unique[msg.user_id].append(search_result)
 
         if search_results_unique:
-            result_string = (
-                "Информация о пользователях. Используй ТОЛЬКО если нужно и НЕ упоминай просто так!"
-            )
+            result_string = self._llm_config.additional_instructions.info_about_user
             for user_id, r in search_results_unique.items():
                 result_string += f"\n\nИнформация об user_id={user_id}:\n{'\n'.join(r)}"
 
