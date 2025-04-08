@@ -115,7 +115,8 @@ class DefaultChatProcessor(ChatProcessor):
                 current_iterations += 1
 
             await self._message_service.add_messages(chat_id, new_messages)
-
+            
+            # TODO: subtract sum of results, not the last one only 
             if result is not None:
                 if result.usage is not None:
                     self._logger.debug(
