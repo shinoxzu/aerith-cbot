@@ -16,7 +16,7 @@ class DefaultSupportService(SupportService):
         self._logger = logging.getLogger(__name__)
 
     async def is_active_supporter(self, user_id: int) -> bool:
-        user_supporter = await self._db_session.get(UserSupport, user_id)
+        user_supporter = await self._db_session.get(UserSupportDbModel, user_id)
         return user_supporter is not None and user_supporter.end_timestamp > int(time.time())
 
     async def fetch_supporter(self, user_id: int) -> UserSupport | None:

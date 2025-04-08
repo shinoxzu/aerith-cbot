@@ -25,7 +25,7 @@ async def private_message_handler(
     message: types.Message,
     support_service: FromDishka[SupportService],
     support_config: FromDishka[SupportConfig],
-    yookassa_config: FromDishka[YooKassaConfig]
+    yookassa_config: FromDishka[YooKassaConfig],
 ):
     if message.from_user is None:
         return
