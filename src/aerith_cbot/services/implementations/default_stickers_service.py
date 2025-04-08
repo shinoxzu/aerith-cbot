@@ -1,5 +1,6 @@
 import random
 
+import emoji
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,3 +36,6 @@ class DefaultStickersService(StickersService):
 
         if file_ids:
             return random.choice(file_ids)
+
+    def is_valid_emoji(self, emoji_string: str) -> bool:
+        return len(emoji_string) == 1 and emoji.emoji_count(emoji_string) == 1

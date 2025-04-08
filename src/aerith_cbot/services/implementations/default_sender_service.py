@@ -47,7 +47,9 @@ class DefaultSenderService(SenderService):
 
                 await asyncio.sleep(1)
 
-            if response.sticker is not None:
+            if response.sticker is not None and self._stickers_service.is_valid_emoji(
+                response.sticker
+            ):
                 sticker_file_id = await self._stickers_service.search(response.sticker)
 
                 if sticker_file_id is not None:

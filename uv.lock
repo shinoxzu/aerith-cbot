@@ -12,6 +12,7 @@ dependencies = [
     { name = "asyncpg" },
     { name = "chatgpt-md-converter" },
     { name = "dishka" },
+    { name = "emoji" },
     { name = "greenlet" },
     { name = "mem0ai" },
     { name = "openai" },
@@ -36,6 +37,7 @@ requires-dist = [
     { name = "asyncpg", specifier = ">=0.30" },
     { name = "chatgpt-md-converter", specifier = ">=0.2" },
     { name = "dishka", specifier = ">=1.4" },
+    { name = "emoji", specifier = ">=2.14.1" },
     { name = "greenlet", specifier = ">=3.1" },
     { name = "mem0ai", specifier = ">=0.1" },
     { name = "openai", specifier = ">=1.64" },
@@ -306,6 +308,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527f8a2e8885fc8015d3e6f5775df186e443e0964a11c3/distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed", size = 60722 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277 },
+]
+
+[[package]]
+name = "emoji"
+version = "2.14.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cb/7d/01cddcbb6f5cc0ba72e00ddf9b1fa206c802d557fd0a20b18e130edf1336/emoji-2.14.1.tar.gz", hash = "sha256:f8c50043d79a2c1410ebfae833ae1868d5941a67a6cd4d18377e2eb0bd79346b", size = 597182 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/db/a0335710caaa6d0aebdaa65ad4df789c15d89b7babd9a30277838a7d9aac/emoji-2.14.1-py3-none-any.whl", hash = "sha256:35a8a486c1460addb1499e3bf7929d3889b2e2841a57401903699fef595e942b", size = 590617 },
 ]
 
 [[package]]
