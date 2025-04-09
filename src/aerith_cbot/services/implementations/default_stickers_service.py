@@ -1,7 +1,7 @@
 import random
 
 import emoji
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.database.models import Sticker
@@ -27,6 +27,11 @@ class DefaultStickersService(StickersService):
             )
 
         self._db_session.add_all(models)
+        await self._db_session.commit()
+
+    async def unload(self, set_name: str) -> None:
+        stmt = delete(Sticker).where(Sticker.set_name == set_name)
+        await self._db_session.execute(stmt)
         await self._db_session.commit()
 
     async def search(self, emoji: str) -> str | None:
