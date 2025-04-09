@@ -3,6 +3,8 @@ import logging
 from aiogram import Bot
 from pydantic import BaseModel
 
+from aerith_cbot.config import LLMConfig
+
 from . import ToolCommand
 
 
@@ -12,15 +14,16 @@ class PinMessageParams(BaseModel):
 
 
 class PinMessageToolCommand(ToolCommand):
-    def __init__(self, bot: Bot) -> None:
+    def __init__(self, bot: Bot, llm_config: LLMConfig) -> None:
         super().__init__()
 
         self._bot = bot
         self._logger = logging.getLogger(__name__)
+        self._llm_config = llm_config
 
     async def execute(self, arguments: str, chat_id: int) -> str:
         params = PinMessageParams.model_validate_json(arguments)
 
         await self._bot.pin_chat_message(chat_id, params.message_id)
 
-        return "Сообщение закреплено."
+        return self._llm_config.additional_instructions.msg_pinned

@@ -3,6 +3,7 @@ import logging
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerith_cbot.config import LLMConfig
 from aerith_cbot.services.abstractions import MemoryService, PermissionChecker
 
 from .base import ToolCommand, ToolCommandDispatcher, ToolExecutionResult
@@ -26,17 +27,20 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
         db_session: AsyncSession,
         memory_service: MemoryService,
         permission_checker: PermissionChecker,
+        llm_config: LLMConfig,
     ):
         self._tools: dict[str, ToolCommand] = {
-            "ignore_message": IgnoreMessageToolCommand(db_session),
-            "wait_for_user_end": WaitForUserEndToolCommand(db_session),
-            "remember_user_info": RememberUserInfoToolCommand(memory_service),
-            "fetch_info": FetchInfoToolCommand(memory_service),
-            "fetch_user_info": FetchUserInfoToolCommand(memory_service),
-            "pin_message": PinMessageToolCommand(bot),
-            "change_chat_name": ChangeChatNameToolCommand(bot, permission_checker),
-            "change_chat_description": ChangeChatDescToolCommand(bot, permission_checker),
-            "kick_user": KickUserToolCommand(bot, permission_checker),
+            "ignore_message": IgnoreMessageToolCommand(db_session, llm_config),
+            "wait_for_user_end": WaitForUserEndToolCommand(db_session, llm_config),
+            "remember_user_info": RememberUserInfoToolCommand(memory_service, llm_config),
+            "fetch_info": FetchInfoToolCommand(memory_service, llm_config),
+            "fetch_user_info": FetchUserInfoToolCommand(memory_service, llm_config),
+            "pin_message": PinMessageToolCommand(bot, llm_config),
+            "change_chat_name": ChangeChatNameToolCommand(bot, permission_checker, llm_config),
+            "change_chat_description": ChangeChatDescToolCommand(
+                bot, permission_checker, llm_config
+            ),
+            "kick_user": KickUserToolCommand(bot, permission_checker, llm_config),
         }
         self._logger = logging.getLogger(__name__)
 

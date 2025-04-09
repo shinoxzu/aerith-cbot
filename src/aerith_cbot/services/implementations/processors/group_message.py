@@ -3,7 +3,7 @@ import time
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerith_cbot.config import LimitsConfig
+from aerith_cbot.config import LimitsConfig, LLMConfig
 from aerith_cbot.database.models import ChatState
 from aerith_cbot.services.abstractions import LimitsService
 from aerith_cbot.services.abstractions.models import ChatType, InputChat, InputMessage
@@ -19,6 +19,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         message_queue: MessageQueue,
         limits_config: LimitsConfig,
         limits_service: LimitsService,
+        llm_config: LLMConfig,
     ) -> None:
         super().__init__()
 
@@ -27,6 +28,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         self._message_queue = message_queue
         self._limits_config = limits_config
         self._limits_service = limits_service
+        self._llm_config = llm_config
 
     async def process(self, message: InputMessage) -> None:
         chat_state = await self._create_of_fetch_chat_state(message.chat)
@@ -72,10 +74,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                 new_messages.append(
                     {
                         "role": "system",
-                        "content": (
-                            "Тебя упомянули в группе. "
-                            "Пользователи хотят пообщаться, обязательно напиши им!"
-                        ),
+                        "content": self._llm_config.additional_instructions.aerith_has_mentioned,
                     }
                 )
             else:
@@ -94,7 +93,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             new_messages.append(
                 {
                     "role": "system",
-                    "content": "В группе лимит на общение с тобой. Извинись и сообщи, что тебе пора.",
+                    "content": self._llm_config.additional_instructions.limit_in_group,
                 }
             )
 

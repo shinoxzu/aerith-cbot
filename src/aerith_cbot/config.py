@@ -49,6 +49,25 @@ class QdrantConfig(BaseModel):
     port: int
 
 
+class AdditionalInstructions(BaseModel):
+    descr_edited: str
+    user_hasnt_desc_rights: str
+    name_changed: str
+    user_hasnt_name_rights: str
+    info_not_found: str
+    msg_ignored: str
+    user_kicked: str
+    user_hasnt_rights_kick: str
+    msg_pinned: str
+    info_saved: str
+    too_long_listening: str
+    user_not_completed_thought: str
+    aerith_has_mentioned: str
+    limit_in_group: str
+    limit_in_private: str
+    info_about_user: str
+
+
 class LLMConfig(BaseModel):
     response_schema: dict
     group_tools: list
@@ -56,6 +75,7 @@ class LLMConfig(BaseModel):
     group_instruction: str
     private_instruction: str
     summarize_instruction: str
+    additional_instructions: AdditionalInstructions
 
 
 class Config(BaseModel):
@@ -90,6 +110,9 @@ def load_llm_config(path: str) -> LLMConfig:
     with open(path + "/instructions/summarize_instruction.md", encoding="utf-8") as f:
         summarize_instruction = f.read()
 
+    with open(path + "/instructions/additional_instructions.json", encoding="utf-8") as f:
+        additional_instructions = f.read()
+
     with open(path + "/tools/group_tools.json", encoding="utf-8") as f:
         group_tools = json.loads(f.read())["tools"]
 
@@ -103,4 +126,5 @@ def load_llm_config(path: str) -> LLMConfig:
         group_tools=group_tools,
         tools=tools,
         summarize_instruction=summarize_instruction,
+        additional_instructions=AdditionalInstructions.model_validate_json(additional_instructions),
     )
