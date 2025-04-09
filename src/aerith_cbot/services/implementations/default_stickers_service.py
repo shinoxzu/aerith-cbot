@@ -1,6 +1,7 @@
 import random
 
-from sqlalchemy import select
+import emoji
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.database.models import Sticker
@@ -28,6 +29,11 @@ class DefaultStickersService(StickersService):
         self._db_session.add_all(models)
         await self._db_session.commit()
 
+    async def unload(self, set_name: str) -> None:
+        stmt = delete(Sticker).where(Sticker.set_name == set_name)
+        await self._db_session.execute(stmt)
+        await self._db_session.commit()
+
     async def search(self, emoji: str) -> str | None:
         stmt = select(Sticker.file_id).where(Sticker.emoji == emoji)
         file_ids_raw = await self._db_session.execute(stmt)
@@ -35,3 +41,6 @@ class DefaultStickersService(StickersService):
 
         if file_ids:
             return random.choice(file_ids)
+
+    def is_valid_emoji(self, emoji_string: str) -> bool:
+        return len(emoji_string) == 1 and emoji.emoji_count(emoji_string) == 1

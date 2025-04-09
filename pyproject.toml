@@ -11,6 +11,7 @@ dependencies = [
     "asyncpg>=0.30",
     "chatgpt-md-converter>=0.2",
     "dishka>=1.4",
+    "emoji>=2.14.1",
     "greenlet>=3.1",
     "mem0ai>=0.1",
     "openai>=1.64",

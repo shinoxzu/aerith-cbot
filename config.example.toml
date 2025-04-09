@@ -1,5 +1,6 @@
 [bot]
 token = "TOKEN"
+admin_ids = [ 123456789 ]
 
 [db]
 connection_string = "postgresql+asyncpg://root:root@db/aerith"
