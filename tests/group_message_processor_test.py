@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerith_cbot.config import LimitsConfig
+from aerith_cbot.config import LimitsConfig, LLMConfig
 from aerith_cbot.database.models import ChatState
 from aerith_cbot.services.abstractions.models import InputChat, InputMessage, InputUser
 from aerith_cbot.services.implementations import DefaultLimitsService
@@ -15,7 +15,9 @@ from aerith_cbot.services.implementations.processors import (
 
 @pytest.mark.asyncio
 async def test_sleeping_chat_ignore(
-    default_message_to_process: InputMessage, default_limits_config: LimitsConfig
+    default_message_to_process: InputMessage,
+    default_limits_config: LimitsConfig,
+    default_llm_config: LLMConfig,
 ):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(
@@ -41,6 +43,7 @@ async def test_sleeping_chat_ignore(
         message_queue=MessageQueue(),
         limits_config=default_limits_config,
         limits_service=mock_limits_service,
+        llm_config=default_llm_config,
     )
 
     await group_message_processor.process(default_message_to_process)
@@ -51,7 +54,9 @@ async def test_sleeping_chat_ignore(
 
 @pytest.mark.asyncio
 async def test_addding_chat_state_if_none(
-    default_message_to_process: InputMessage, default_limits_config: LimitsConfig
+    default_message_to_process: InputMessage,
+    default_limits_config: LimitsConfig,
+    default_llm_config: LLMConfig,
 ):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(return_value=None)
@@ -66,6 +71,7 @@ async def test_addding_chat_state_if_none(
         message_queue=MessageQueue(),
         limits_config=default_limits_config,
         limits_service=mock_limits_service,
+        llm_config=default_llm_config,
     )
 
     await group_message_processor.process(default_message_to_process)
@@ -75,7 +81,9 @@ async def test_addding_chat_state_if_none(
 
 
 @pytest.mark.asyncio
-async def test_skipping_unfocused(default_limits_config: LimitsConfig):
+async def test_skipping_unfocused(
+    default_limits_config: LimitsConfig, default_llm_config: LLMConfig
+):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(
         return_value=ChatState(
@@ -96,6 +104,7 @@ async def test_skipping_unfocused(default_limits_config: LimitsConfig):
         message_queue=mock_message_queue,
         limits_config=default_limits_config,
         limits_service=mock_limits_service,
+        llm_config=default_llm_config,
     )
 
     await group_message_processor.process(
@@ -116,7 +125,9 @@ async def test_skipping_unfocused(default_limits_config: LimitsConfig):
 
 
 @pytest.mark.asyncio
-async def test_focusing_unfocused(default_limits_config: LimitsConfig):
+async def test_focusing_unfocused(
+    default_limits_config: LimitsConfig, default_llm_config: LLMConfig
+):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(
         return_value=ChatState(
@@ -137,6 +148,7 @@ async def test_focusing_unfocused(default_limits_config: LimitsConfig):
         message_queue=mock_message_queue,
         limits_config=default_limits_config,
         limits_service=mock_limits_service,
+        llm_config=default_llm_config,
     )
 
     await group_message_processor.process(
@@ -156,7 +168,9 @@ async def test_focusing_unfocused(default_limits_config: LimitsConfig):
 
 
 @pytest.mark.asyncio
-async def test_adding_message_to_queue(default_limits_config: LimitsConfig):
+async def test_adding_message_to_queue(
+    default_limits_config: LimitsConfig, default_llm_config: LLMConfig
+):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(
         return_value=ChatState(
@@ -177,6 +191,7 @@ async def test_adding_message_to_queue(default_limits_config: LimitsConfig):
         message_queue=mock_message_queue,
         limits_config=default_limits_config,
         limits_service=mock_limits_service,
+        llm_config=default_llm_config,
     )
 
     await group_message_processor.process(
