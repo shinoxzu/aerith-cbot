@@ -38,10 +38,7 @@ class LimitsConfig(BaseModel):
 
 class SupportConfig(BaseModel):
     price: int
-
-
-class YooKassaConfig(BaseModel):
-    price: int
+    duration: int
     provider_token: str
 
 
@@ -66,7 +63,6 @@ class Config(BaseModel):
     openai: OpenAIConfig
     limits: LimitsConfig
     support: SupportConfig
-    yookassa: YooKassaConfig
     qdrant: QdrantConfig
     llm: LLMConfig
 

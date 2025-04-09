@@ -42,8 +42,8 @@ def mock_dependencies(default_limits_config: LimitsConfig):
     mock_message_service.shorten_full_history_without_media = AsyncMock()
 
     mock_limits_service = MagicMock(spec=DefaultLimitsService)
-    mock_limits_service.subtract_private_tokens = MagicMock()
-    mock_limits_service.subtract_group_tokens = MagicMock()
+    mock_limits_service.subtract_private_tokens = AsyncMock()
+    mock_limits_service.subtract_group_tokens = AsyncMock()
 
     return {
         "openai_client": mock_openai_client,
@@ -132,7 +132,7 @@ async def test_group_chat_uses_group_tools(mock_dependencies, mock_chat_completi
     await processor.process(chat_id=123, chat_type=ChatType.group)
 
     call_args = deps["openai_client"].chat.completions.create.call_args
-    assert call_args[1]["tools"] == deps["llm_config"].group_tools + deps["llm_config"].tools
+    assert call_args[1]["tools"] == deps["llm_config"].tools + deps["llm_config"].group_tools
 
 
 @pytest.mark.asyncio

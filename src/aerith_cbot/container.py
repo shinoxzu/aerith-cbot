@@ -30,6 +30,7 @@ from aerith_cbot.services.implementations import (
     GroupPermissionChecker,
     Mem0MemoryService,
     OpenAIHistorySummarizer,
+    SupportNotifier,
 )
 from aerith_cbot.services.implementations.chat_dispatcher import ChatDispatcher, MessageQueue
 from aerith_cbot.services.implementations.processors import (
@@ -47,6 +48,7 @@ from aerith_cbot.services.implementations.providers import ClientsProvider, Conf
 async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
     service_provider = Provider(scope=Scope.REQUEST)
 
+    service_provider.provide(SupportNotifier, scope=Scope.APP)
     service_provider.provide(ChatDispatcher, scope=Scope.APP)
     service_provider.provide(MessageQueue, scope=Scope.APP)
     service_provider.provide(DefaultSupportService, provides=SupportService)
@@ -79,3 +81,6 @@ async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
 async def _run_bg_workers(container: AsyncContainer) -> None:
     chat_dispatcher = await container.get(ChatDispatcher)
     chat_dispatcher.run_task = asyncio.create_task(chat_dispatcher.run())
+
+    support_notifier = await container.get(SupportNotifier)
+    support_notifier.run_task = asyncio.create_task(support_notifier.run())

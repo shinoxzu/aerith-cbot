@@ -6,6 +6,7 @@ from .default_support_service import DefaultSupportService
 from .group_permission_checker import GroupPermissionChecker
 from .mem0_memory_service import Mem0MemoryService
 from .openai_history_summarizer import OpenAIHistorySummarizer
+from .support_notifier import SupportNotifier
 
 __all__ = (
     "Mem0MemoryService",
@@ -16,4 +17,5 @@ __all__ = (
     "GroupPermissionChecker",
     "DefaultLimitsService",
     "DefaultSupportService",
+    "SupportNotifier",
 )

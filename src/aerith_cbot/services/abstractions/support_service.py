@@ -15,3 +15,7 @@ class SupportService(ABC):
     @abstractmethod
     async def prolong_support(self, user_id: int, interval: int) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def notify_users_to_prolong(self) -> None:
+        raise NotImplementedError
