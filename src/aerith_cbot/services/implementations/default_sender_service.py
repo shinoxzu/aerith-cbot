@@ -30,8 +30,6 @@ class DefaultSenderService(SenderService):
             await self._bot.send_chat_action(chat_id=chat_id, action="typing")
 
             for text in response.text:
-                await self._bot.send_chat_action(chat_id=chat_id, action="typing")
-
                 # model sometime returns empty text string
                 formatted_text = telegram_format(text)
                 if not formatted_text:
@@ -53,7 +51,7 @@ class DefaultSenderService(SenderService):
                 sticker_file_id = await self._stickers_service.search(response.sticker)
 
                 if sticker_file_id is not None:
-                    self._logger.info(
+                    self._logger.debug(
                         "Sticker with emoji %s found, file_id is: %s",
                         response.sticker,
                         sticker_file_id,
@@ -66,7 +64,7 @@ class DefaultSenderService(SenderService):
                         else None,
                     )
                 else:
-                    self._logger.info(
+                    self._logger.debug(
                         "Cannot find sticker with emoji %s, sending text message instead",
                         response.sticker,
                     )

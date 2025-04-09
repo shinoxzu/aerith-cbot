@@ -25,9 +25,7 @@ max_context_tokens=70_000
 
 [support]
 price=299
-
-[yookassa]
-price=299
+duration=2_678_400
 provider_token="TOKEN"
 
 [qdrant]
