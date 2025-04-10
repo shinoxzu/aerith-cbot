@@ -52,7 +52,9 @@ async def private_message_handler(
 
 @support_router.pre_checkout_query()
 async def pre_checkout_query_handler(
-    pre_checkout_query: types.PreCheckoutQuery, support_config: FromDishka[SupportConfig]
+    pre_checkout_query: types.PreCheckoutQuery,
+    support_service: FromDishka[SupportService],
+    support_config: FromDishka[SupportConfig],
 ):
     logger.info("pre-payment from %s: %s", pre_checkout_query.from_user.id, pre_checkout_query)
 
@@ -65,6 +67,14 @@ async def pre_checkout_query_handler(
 
         return await pre_checkout_query.answer(
             False, error_message="извини, но цена изменилась!! оформи, пожалуйста, покупку заново"
+        )
+
+    is_user_supporter = await support_service.is_active_supporter(pre_checkout_query.from_user.id)
+    if is_user_supporter:
+        logger.warn("user %s tried to buy support with active one", pre_checkout_query.from_user.id)
+
+        return await pre_checkout_query.answer(
+            False, error_message="извини, но ты уже поддерживаешь Айрис!!"
         )
 
     await pre_checkout_query.answer(True)
