@@ -1,6 +1,7 @@
+import asyncio
 import logging
 
-from openai import APIError, AsyncOpenAI, RateLimitError
+from openai import APIError, AsyncOpenAI, BadRequestError, RateLimitError
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 from pydantic import ValidationError
 
@@ -68,7 +69,9 @@ class DefaultChatProcessor(ChatProcessor):
             ):
                 result = await self._get_llm_response(
                     chat_id,
-                    instruction_messages + old_messages + new_messages,
+                    instruction_messages,
+                    old_messages,
+                    new_messages,
                     tools,
                 )
 
@@ -235,10 +238,15 @@ class DefaultChatProcessor(ChatProcessor):
         return (tool_response, tool_stop)
 
     async def _get_llm_response(
-        self, chat_id: int, messages: list[dict], tools: list
+        self,
+        chat_id: int,
+        instruction_messages: list[dict],
+        old_messages: list[dict],
+        new_messages: list[dict],
+        tools: list,
     ) -> ChatCompletion:
         attempts = 0
-        last_error = ValueError("Error when sending request to a llm")
+        last_error = ValueError("Undefined error when sending request to a llm")
 
         while True:
             if attempts >= DefaultChatProcessor.MAX_LLM_CALL_ATTEMPTS:
@@ -248,25 +256,40 @@ class DefaultChatProcessor(ChatProcessor):
                 return await self._openai_client.chat.completions.create(
                     model=self._openai_config.model,
                     tools=tools,
-                    messages=messages,  # type: ignore
+                    messages=instruction_messages + old_messages + new_messages,  # type: ignore
                     response_format=self._llm_config.response_schema,  # type: ignore
                     store=True,
                 )
             except RateLimitError as err:
                 last_error = err
                 self._logger.error(
-                    "Limit error when sending request to a llm %s; trying to shorten history",
+                    "RateLimitError error when sending request to a llm %s; trying to shorten history",
                     err,
                     exc_info=err,
                 )
+
+                # after shortening history, update old_messages both here and in the caller
                 await self._message_service.shorten_history(chat_id)
+                old_messages[:] = await self._message_service.fetch_messages(chat_id)
+            except BadRequestError as err:
+                last_error = err
+                self._logger.error(
+                    "BadRequestError error when sending request to a llm %s; trying to remove media",
+                    err,
+                    exc_info=err,
+                )
+
+                # after shortening history, update old_messages both here and in the caller
+                await self._message_service.shorten_full_history_without_media(chat_id)
+                old_messages[:] = await self._message_service.fetch_messages(chat_id)
             except APIError as err:
                 last_error = err
                 self._logger.error(
-                    "OpenAI API error when sending request to a llm %s; keep trying",
+                    "APIError error when sending request to a llm %s; waiting for 2s and trying again",
                     err,
                     exc_info=err,
                 )
-                await self._message_service.shorten_full_history_without_media(chat_id)
+
+                await asyncio.sleep(2)
             finally:
                 attempts += 1

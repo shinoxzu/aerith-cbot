@@ -43,8 +43,7 @@ class SupportConfig(BaseModel):
     provider_token: str
 
 
-class QdrantConfig(BaseModel):
-    collection_name: str
+class ChromaConfig(BaseModel):
     host: str
     port: int
 
@@ -84,7 +83,7 @@ class Config(BaseModel):
     openai: OpenAIConfig
     limits: LimitsConfig
     support: SupportConfig
-    qdrant: QdrantConfig
+    chroma: ChromaConfig
     llm: LLMConfig
 
 
