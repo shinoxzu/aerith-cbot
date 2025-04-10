@@ -1,4 +1,5 @@
 import logging
+import random
 import time
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,7 @@ from aerith_cbot.database.models import ChatState
 from aerith_cbot.services.abstractions import LimitsService
 from aerith_cbot.services.abstractions.models import ChatType, InputChat, InputMessage
 from aerith_cbot.services.abstractions.processors import GroupMessageProcessor
+from aerith_cbot.services.abstractions.sender_service import SenderService
 from aerith_cbot.services.abstractions.utils.mapping import input_msg_to_model_input
 from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
 
@@ -20,6 +22,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         limits_config: LimitsConfig,
         limits_service: LimitsService,
         llm_config: LLMConfig,
+        sender_service: SenderService,
     ) -> None:
         super().__init__()
 
@@ -29,6 +32,13 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         self._limits_config = limits_config
         self._limits_service = limits_service
         self._llm_config = llm_config
+        self._sender_service = sender_service
+        self.phrases = [
+            "я занята, так что давай позже...",
+            "ой, сейчас не могу, давай чуть позже..",
+            "извини, сейчас не могу, позже наверстаем!",
+            "занята, но обещаю скоро откликнуться",
+        ]
 
     async def process(self, message: InputMessage) -> None:
         chat_state = await self._create_of_fetch_chat_state(message.chat)
@@ -41,7 +51,12 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                 message.chat,
             )
 
-            # TODO: send message "я занята, так что давай позже..."
+            # send message "я занята, так что давай позже..."
+            if chat_state.last_ignored_answer >= time.time() + 60 * 30:
+                chat_state.last_ignored_answer = int(time.time())
+                await self._db_session.commit()
+                phrase = random.choice(self.phrases)
+                await self._sender_service.send_ignoring(message.chat.id, phrase)
 
             return
 
@@ -52,17 +67,25 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         if not chat_state.is_focused:
             self._logger.debug("Message from unfocused chat: %s", message.chat.id)
 
+            if not message.contains_aerith_mention:
+                return
+
             if not can_use:
                 self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
 
                 chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
+
+                # send message "я занята, так что давай позже..."
+                if chat_state.last_ignored_answer >= time.time() + 60 * 30:
+                    chat_state.last_ignored_answer = int(time.time())
+                    await self._db_session.commit()
+                    phrase = random.choice(self.phrases)
+                    await self._sender_service.send_ignoring(message.chat.id, phrase)
+
                 await self._db_session.commit()
-
-                # TODO: send message "я занята, так что давай позже..."
-
                 return
 
-            if message.contains_aerith_mention:
+            else:
                 self._logger.info("Chat %s is focused now; processing message", message.chat.id)
 
                 chat_state.ignoring_streak = 0
@@ -77,8 +100,6 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                         "content": self._llm_config.additional_instructions.aerith_has_mentioned,
                     }
                 )
-            else:
-                return
 
         # if there are no tokens available, we say goodbye to the user
         # also we make chat inactive by setting sleeping_till property

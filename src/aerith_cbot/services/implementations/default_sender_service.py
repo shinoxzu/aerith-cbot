@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 
 from aiogram import Bot
 from aiogram.enums import ParseMode
@@ -92,3 +93,23 @@ class DefaultSenderService(SenderService):
             .values(listening_streak=0, ignoring_streak=0)
         )
         await self._db_session.commit()
+
+    async def send_ignoring(self, chat_id: int, phrase: str) -> None:
+        sticker_chance = 0.50
+        emojies = "😴💤💼"
+
+        await self._bot.send_message(chat_id, phrase)
+
+        if random.random() > sticker_chance:
+            emoji = random.choice(emojies)
+            sticker_file_id = await self._stickers_service.search(emoji)
+
+            if sticker_file_id is not None:
+                self._logger.debug(
+                    "Sticker with emoji %s found, file_id is: %s",
+                    emoji,
+                    sticker_file_id,
+                )
+                await self._bot.send_sticker(chat_id, sticker_file_id)
+            else:
+                self._logger.debug("Cannot find sticker with emoji %s", emoji)

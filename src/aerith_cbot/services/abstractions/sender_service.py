@@ -11,3 +11,7 @@ class SenderService(ABC):
     @abstractmethod
     async def send_refusal(self, chat_id: int, refusal: str) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def send_ignoring(self, chat_id: int, phrase: str) -> None:
+        raise NotImplementedError
