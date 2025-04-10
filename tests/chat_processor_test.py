@@ -404,7 +404,7 @@ async def test_api_error_retry(mock_dependencies, mock_chat_completion):
         deps["limits_serivce"],
         deps["limits_config"],
     )
-    
+
     with patch("asyncio.sleep", AsyncMock()) as sleep_mock:
         await processor.process(chat_id=123, chat_type=ChatType.private)
 
