@@ -8,27 +8,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      qdrant:
+      chroma:
         condition: service_healthy
     environment:
       - CONFIG_PATH=${BOT_CONFIG_PATH}
       - LLM_CONFIG_PATH=${LLM_CONFIG_PATH}
       - PYTHONUNBUFFERED=1
-  qdrant:
-    image: qdrant/qdrant:latest
-    restart: unless-stopped
-    configs:
-      - source: qdrant_config
-        target: /qdrant/config/production.yaml
+  chroma:
+    image: chromadb/chroma
     volumes:
-      - qdrant-data:/qdrant/storage
-    ports:
-      - 6333:6333
+      - chroma-data:/data
     healthcheck:
-      test: bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1
-      interval: 1s
-      timeout: 10s
-      retries: 10
+      test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
   db:
     image: postgres:17
     restart: unless-stopped
@@ -45,15 +39,9 @@ services:
       interval: 1s
       timeout: 10s
       retries: 10
-configs:
-  qdrant_config:
-    content: |
-      log_level: INFO
 
 volumes:
   chroma-data:
     driver: local
   db-data:
-    driver: local
-  qdrant-data:
     driver: local

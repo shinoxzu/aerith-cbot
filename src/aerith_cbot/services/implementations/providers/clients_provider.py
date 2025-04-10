@@ -1,12 +1,16 @@
 from typing import AsyncIterable
 
 from dishka import Provider, Scope, provide
-from mem0 import Memory
 from openai import AsyncOpenAI
 
+from aerimory import AerimoryClient
+from aerimory.llm import OpenAILLM
+from aerimory.types import ChromaConfig as AerimoryChromaConfig
+from aerimory.types import ChromaOpenAIEmbeddingsConfig, OpenAILLMConfig
+from aerimory.vector_stores import ChromaVectorStore
 from aerith_cbot.config import (
+    ChromaConfig,
     OpenAIConfig,
-    QdrantConfig,
 )
 
 
@@ -18,35 +22,24 @@ class ClientsProvider(Provider):
         await client.close()
 
     @provide(scope=Scope.APP)
-    async def mem0_client(
+    async def aerimory_client(
         self,
-        qdrant_config: QdrantConfig,
+        chroma_config: ChromaConfig,
         openai_config: OpenAIConfig,
-    ) -> Memory:
-        config = {
-            "vector_store": {
-                "provider": "qdrant",
-                "config": {
-                    "collection_name": qdrant_config.collection_name,
-                    "host": qdrant_config.host,
-                    "port": qdrant_config.port,
-                },
-            },
-            "llm": {
-                "provider": "openai_structured",
-                "config": {
-                    "model": openai_config.memory_llm_model,
-                    "api_key": openai_config.token,
-                },
-            },
-            "embedder": {
-                "provider": "openai",
-                "config": {
-                    "model": openai_config.memory_embedder_model,
-                    "api_key": openai_config.token,
-                },
-            },
-            "version": "v1.1",
-        }
+    ) -> AerimoryClient:
+        open_ai_llm_config = OpenAILLMConfig(
+            api_key=openai_config.token, model=openai_config.memory_llm_model
+        )
+        aeimory_chroma_config = AerimoryChromaConfig(
+            host=chroma_config.host,
+            port=chroma_config.port,
+            openai_embeddings=ChromaOpenAIEmbeddingsConfig(
+                api_key=openai_config.token, embedding_model=openai_config.memory_embedder_model
+            ),
+        )
 
-        return Memory.from_config(config_dict=config)
+        client = AerimoryClient(
+            vector_store=ChromaVectorStore(aeimory_chroma_config), llm=OpenAILLM(open_ai_llm_config)
+        )
+
+        return client

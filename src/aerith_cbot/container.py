@@ -22,13 +22,13 @@ from aerith_cbot.services.abstractions.processors import (
     PrivateMessageProcessor,
 )
 from aerith_cbot.services.implementations import (
+    AerimoryMemoryService,
     DefaultLimitsService,
     DefaultMessageService,
     DefaultSenderService,
     DefaultStickersService,
     DefaultSupportService,
     GroupPermissionChecker,
-    Mem0MemoryService,
     OpenAIHistorySummarizer,
     SupportNotifier,
 )
@@ -62,7 +62,7 @@ async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
     service_provider.provide(DefaultChatProcessor, provides=ChatProcessor)
     service_provider.provide(DefaultSenderService, provides=SenderService)
     service_provider.provide(DefaultStickersService, provides=StickersService)
-    service_provider.provide(Mem0MemoryService, provides=MemoryService)
+    service_provider.provide(AerimoryMemoryService, provides=MemoryService)
     service_provider.provide(lambda: bot, scope=Scope.APP, provides=Bot)
 
     container = make_async_container(

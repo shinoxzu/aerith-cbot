@@ -28,7 +28,6 @@ price=299
 duration=2_678_400
 provider_token="TOKEN"
 
-[qdrant]
-collection_name = "aerith"
-host = "qdrant"
-port = 6333
+[chroma]
+host = "chroma"
+port = 8000
