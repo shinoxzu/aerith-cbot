@@ -14,6 +14,8 @@ from aerith_cbot.services.abstractions.models import ModelResponse
 
 
 class DefaultSenderService(SenderService):
+    IGNORING_STICKER_CHANCE = 0.5
+
     def __init__(
         self, db_session: AsyncSession, stickers_service: StickersService, bot: Bot
     ) -> None:
@@ -95,12 +97,15 @@ class DefaultSenderService(SenderService):
         await self._db_session.commit()
 
     async def send_ignoring(self, chat_id: int, phrase: str) -> None:
-        sticker_chance = 0.50
-        emojies = "😴💤💼"
+        await self._bot.send_chat_action(chat_id=chat_id, action="typing")
+
+        random_sleep_interval = random.randint(1, 3)
+        await asyncio.sleep(random_sleep_interval)
 
         await self._bot.send_message(chat_id, phrase)
 
-        if random.random() > sticker_chance:
+        if random.random() < DefaultSenderService.IGNORING_STICKER_CHANCE:
+            emojies = "😴💤💼"
             emoji = random.choice(emojies)
             sticker_file_id = await self._stickers_service.search(emoji)
 

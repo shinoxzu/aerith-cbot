@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerith_cbot.config import LimitsConfig, LLMConfig
 from aerith_cbot.database.models import ChatState
 from aerith_cbot.services.abstractions.models import InputMessage
-from aerith_cbot.services.implementations import DefaultLimitsService
+from aerith_cbot.services.implementations import DefaultLimitsService, DefaultSenderService
 from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
 from aerith_cbot.services.implementations.processors.private_message import (
     DefaultPrivateMessageProcessor,
@@ -27,6 +27,7 @@ async def test_sleeping_chat_ignore(
             ignoring_streak=0,
             listening_streak=0,
             sleeping_till=1000000000000000,
+            last_ignored_answer=0,
         )
     )
     mock_db_session.add = MagicMock()
@@ -38,12 +39,15 @@ async def test_sleeping_chat_ignore(
     mock_limits_service = MagicMock(spec=DefaultLimitsService)
     mock_limits_service.check_private_limit = AsyncMock(return_value=True)
 
+    mock_sender_service = MagicMock(spec=DefaultSenderService)
+
     private_message_processor = DefaultPrivateMessageProcessor(
         db_session=mock_db_session,
         message_queue=mock_message_queue,
         limits_config=default_limits_config,
         limits_service=mock_limits_service,
         llm_config=default_llm_config,
+        sender_service=mock_sender_service,
     )
 
     await private_message_processor.process(default_message_to_process)
@@ -66,12 +70,15 @@ async def test_addding_chat_state_if_none(
     mock_limits_service = MagicMock(spec=DefaultLimitsService)
     mock_limits_service.check_private_limit = AsyncMock(return_value=False)
 
+    mock_sender_service = MagicMock(spec=DefaultSenderService)
+
     private_message_processor = DefaultPrivateMessageProcessor(
         db_session=mock_db_session,
         message_queue=MessageQueue(),
         limits_config=default_limits_config,
         limits_service=mock_limits_service,
         llm_config=default_llm_config,
+        sender_service=mock_sender_service,
     )
 
     await private_message_processor.process(default_message_to_process)
@@ -101,12 +108,15 @@ async def test_adding_message_to_queue(
     mock_limits_service = MagicMock(spec=DefaultLimitsService)
     mock_limits_service.check_private_limit = AsyncMock(return_value=False)
 
+    mock_sender_service = MagicMock(spec=DefaultSenderService)
+
     private_message_processor = DefaultPrivateMessageProcessor(
         db_session=mock_db_session,
         message_queue=mock_message_queue,
         limits_config=default_limits_config,
         limits_service=mock_limits_service,
         llm_config=default_llm_config,
+        sender_service=mock_sender_service,
     )
 
     await private_message_processor.process(default_message_to_process)

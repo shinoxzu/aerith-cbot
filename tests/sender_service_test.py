@@ -36,7 +36,7 @@ async def test_send_text_message():
     mock_stickers_service.is_valid_emoji.assert_not_called()
 
     assert mock_bot.send_message.call_count == 2
-    assert mock_bot.send_chat_action.call_count == 3
+    assert mock_bot.send_chat_action.call_count == 1
 
 
 @pytest.mark.asyncio

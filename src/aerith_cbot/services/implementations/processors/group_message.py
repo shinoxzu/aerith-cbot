@@ -15,6 +15,8 @@ from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
 
 
 class DefaultGroupMessageProcessor(GroupMessageProcessor):
+    IGNORED_MESSAGE_MIN_INTERVAL = 1800
+
     def __init__(
         self,
         db_session: AsyncSession,
@@ -33,12 +35,6 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         self._limits_service = limits_service
         self._llm_config = llm_config
         self._sender_service = sender_service
-        self.phrases = [
-            "я занята, так что давай позже...",
-            "ой, сейчас не могу, давай чуть позже..",
-            "извини, сейчас не могу, позже наверстаем!",
-            "занята, но обещаю скоро откликнуться",
-        ]
 
     async def process(self, message: InputMessage) -> None:
         chat_state = await self._create_of_fetch_chat_state(message.chat)
@@ -51,12 +47,16 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                 message.chat,
             )
 
-            # send message "я занята, так что давай позже..."
-            if chat_state.last_ignored_answer >= time.time() + 60 * 30:
+            if (
+                time.time() - chat_state.last_ignored_answer
+                > DefaultGroupMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
+            ):
+                # TODO: generate phrase from LLM
+                phrase = self._fetch_random_ignore_phrase()
+                await self._sender_service.send_ignoring(message.chat.id, phrase)
+
                 chat_state.last_ignored_answer = int(time.time())
                 await self._db_session.commit()
-                phrase = random.choice(self.phrases)
-                await self._sender_service.send_ignoring(message.chat.id, phrase)
 
             return
 
@@ -77,10 +77,11 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
                 # send message "я занята, так что давай позже..."
                 if chat_state.last_ignored_answer >= time.time() + 60 * 30:
+                    phrase = self._fetch_random_ignore_phrase()
+                    await self._sender_service.send_ignoring(message.chat.id, phrase)
+
                     chat_state.last_ignored_answer = int(time.time())
                     await self._db_session.commit()
-                    phrase = random.choice(self.phrases)
-                    await self._sender_service.send_ignoring(message.chat.id, phrase)
 
                 await self._db_session.commit()
                 return
@@ -151,3 +152,13 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             await self._db_session.commit()
 
         return chat_state
+
+    def _fetch_random_ignore_phrase(self) -> str:
+        return random.choice(
+            [
+                "извини, но я сейчас занята. обязательно поговорим позже!!!",
+                "ой, сейчас не могу, давай чуть позже..",
+                "извини, сейчас не могу, позже наверстаем!",
+                "занята, но обещаю скоро откликнуться.......",
+            ]
+        )
