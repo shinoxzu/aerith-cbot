@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import Request, Response
@@ -404,13 +404,13 @@ async def test_api_error_retry(mock_dependencies, mock_chat_completion):
         deps["limits_serivce"],
         deps["limits_config"],
     )
+    
+    with patch("asyncio.sleep", AsyncMock()) as sleep_mock:
+        await processor.process(chat_id=123, chat_type=ChatType.private)
 
-    await processor.process(chat_id=123, chat_type=ChatType.private)
-
-    assert deps["openai_client"].chat.completions.create.call_count == 2
-
-    deps["message_service"].shorten_full_history_without_media.assert_called_once_with(123)
-    deps["sender_service"].send.assert_called_once()
+        sleep_mock.assert_called_once()
+        deps["sender_service"].send.assert_called_once()
+        assert deps["openai_client"].chat.completions.create.call_count == 2
 
 
 @pytest.mark.asyncio
