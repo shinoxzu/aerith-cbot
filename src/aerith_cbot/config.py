@@ -40,6 +40,7 @@ class LimitsConfig(BaseModel):
 class SupportConfig(BaseModel):
     price: int
     duration: int
+    nearest_buy_interval: int
     provider_token: str
 
 

@@ -25,9 +25,38 @@ class DefaultLimitsService(LimitsService):
         self, db_session: AsyncSession, limits_config: LimitsConfig, support_service: SupportService
     ) -> None:
         self._db_session = db_session
-        self._logger = logging.getLogger(__name__)
         self._limits_config = limits_config
         self._support_service = support_service
+        self._logger = logging.getLogger(__name__)
+
+    async def reset_all_supporter_user_limits(self, user_id: int) -> None:
+        self._logger.info("resetting limit for supporter %s", user_id)
+
+        current_time = int(time.time())
+
+        stmt = (
+            update(UserGroupLimitEntry)
+            .where(UserGroupLimitEntry.user_id == user_id)
+            .values(
+                user_id=user_id,
+                last_ref_time=current_time,
+                remain_tokens=self._limits_config.group_per_support_user_tokens_limit,
+            )
+        )
+        await self._db_session.execute(stmt)
+
+        stmt = (
+            update(UserPrivateLimitEntry)
+            .where(UserPrivateLimitEntry.user_id == user_id)
+            .values(
+                user_id=user_id,
+                last_ref_time=current_time,
+                remain_tokens=self._limits_config.private_support_tokens_limit,
+            )
+        )
+        await self._db_session.execute(stmt)
+
+        await self._db_session.commit()
 
     async def check_private_limit(self, user_id: int) -> bool:
         limit_entry = await self._create_or_fetch_user_limit_entry(user_id)
@@ -64,10 +93,15 @@ class DefaultLimitsService(LimitsService):
         if limit_entry is None:
             self._logger.debug("Adding new limit_entry for user: %s", user_id)
 
+            if await self._support_service.is_active_supporter(user_id):
+                remain_tokens = self._limits_config.private_support_tokens_limit
+            else:
+                remain_tokens = self._limits_config.private_tokens_limit
+
             limit_entry = UserPrivateLimitEntry(
                 user_id=user_id,
                 last_ref_time=int(time.time()),
-                remain_tokens=self._limits_config.private_tokens_limit,
+                remain_tokens=remain_tokens,
             )
             self._db_session.add(limit_entry)
             await self._db_session.commit()
@@ -77,7 +111,7 @@ class DefaultLimitsService(LimitsService):
     async def check_group_limit(self, user_id: int, chat_id: int) -> bool:
         # create (if non-exists) user global limit info and update (or create)
         # local last contacted time with Aerith
-        await self._update_user_contact_and_ensure_limit_entry(user_id, chat_id)
+        await self._update_user_contact_and_create_limit_entry(user_id, chat_id)
 
         # TODO: optimiation. call this only if some second passed
         await self._update_group_members_limits(
@@ -195,31 +229,7 @@ class DefaultLimitsService(LimitsService):
 
         return limit_entry
 
-    async def _fetch_top_user_limit_entry(
-        self,
-        chat_id: int,
-        min_last_contacted_time: int,
-    ) -> UserGroupLimitEntry | None:
-        stmt = (
-            select(UserGroupLimitEntry)
-            .join(
-                UserGroupLastContact,
-                (UserGroupLastContact.user_id == UserGroupLimitEntry.user_id)
-                & (UserGroupLastContact.chat_id == chat_id),
-            )
-            .where(
-                UserGroupLastContact.last_contacted_time >= min_last_contacted_time,
-            )
-            .order_by(
-                desc(UserGroupLimitEntry.remain_tokens),
-                desc(UserGroupLastContact.last_contacted_time),
-            )
-            .limit(1)
-        )
-        result = await self._db_session.execute(stmt)
-        return result.scalar_one_or_none()
-
-    async def _update_user_contact_and_ensure_limit_entry(self, user_id: int, chat_id: int) -> None:
+    async def _update_user_contact_and_create_limit_entry(self, user_id: int, chat_id: int) -> None:
         current_time = int(time.time())
 
         last_contact = UserGroupLastContact(
@@ -227,10 +237,16 @@ class DefaultLimitsService(LimitsService):
         )
         await self._db_session.merge(last_contact)
 
+        if await self._support_service.is_active_supporter(user_id):
+            remain_tokens = self._limits_config.group_per_support_user_tokens_limit
+        else:
+            remain_tokens = self._limits_config.group_per_user_tokens_limit
+
+        # create user if non-exists. otherwise do nothing
         stmt = insert(UserGroupLimitEntry).values(
             user_id=user_id,
             last_ref_time=current_time,
-            remain_tokens=self._limits_config.group_per_user_tokens_limit,
+            remain_tokens=remain_tokens,
         )
         stmt = stmt.on_conflict_do_nothing(index_elements=["user_id"])
 
@@ -289,3 +305,27 @@ class DefaultLimitsService(LimitsService):
             await self._db_session.execute(supporter_stmt)
 
         await self._db_session.commit()
+
+    async def _fetch_top_user_limit_entry(
+        self,
+        chat_id: int,
+        min_last_contacted_time: int,
+    ) -> UserGroupLimitEntry | None:
+        stmt = (
+            select(UserGroupLimitEntry)
+            .join(
+                UserGroupLastContact,
+                (UserGroupLastContact.user_id == UserGroupLimitEntry.user_id)
+                & (UserGroupLastContact.chat_id == chat_id),
+            )
+            .where(
+                UserGroupLastContact.last_contacted_time >= min_last_contacted_time,
+            )
+            .order_by(
+                desc(UserGroupLimitEntry.remain_tokens),
+                desc(UserGroupLastContact.last_contacted_time),
+            )
+            .limit(1)
+        )
+        result = await self._db_session.execute(stmt)
+        return result.scalar_one_or_none()

@@ -137,7 +137,7 @@ async def test_check_group_limit_no_tokens_in_group(
 
     service = DefaultLimitsService(mock_db_session, default_limits_config, mock_support_service)
 
-    service._update_user_contact_and_ensure_limit_entry = AsyncMock()
+    service._update_user_contact_and_create_limit_entry = AsyncMock()
     service._update_group_members_limits = AsyncMock()
 
     group_limit = GroupLimitEntry(chat_id=chat_id, last_ref_time=current_time, remain_tokens=0)
@@ -148,7 +148,7 @@ async def test_check_group_limit_no_tokens_in_group(
         result = await service.check_group_limit(user_id, chat_id)
 
     assert result is False
-    service._update_user_contact_and_ensure_limit_entry.assert_called_once_with(user_id, chat_id)
+    service._update_user_contact_and_create_limit_entry.assert_called_once_with(user_id, chat_id)
     service._update_group_members_limits.assert_called()
 
 
@@ -254,7 +254,7 @@ async def test_check_group_limit_refresh_group_tokens(
 
     service = DefaultLimitsService(mock_db_session, default_limits_config, mock_support_service)
 
-    service._update_user_contact_and_ensure_limit_entry = AsyncMock()
+    service._update_user_contact_and_create_limit_entry = AsyncMock()
     service._update_group_members_limits = AsyncMock()
 
     group_limit = GroupLimitEntry(
@@ -291,7 +291,7 @@ async def test_check_group_limit_no_users_with_tokens(
 
     service = DefaultLimitsService(mock_db_session, default_limits_config, mock_support_service)
 
-    service._update_user_contact_and_ensure_limit_entry = AsyncMock()
+    service._update_user_contact_and_create_limit_entry = AsyncMock()
     service._update_group_members_limits = AsyncMock()
 
     group_limit = GroupLimitEntry(chat_id=chat_id, last_ref_time=current_time, remain_tokens=50)
@@ -335,7 +335,7 @@ async def test_update_user_contact_and_ensure_limit_entry(
     service = DefaultLimitsService(mock_db_session, default_limits_config, mock_support_service)
 
     with patch("time.time", return_value=current_time):
-        await service._update_user_contact_and_ensure_limit_entry(user_id, chat_id)
+        await service._update_user_contact_and_create_limit_entry(user_id, chat_id)
 
     mock_db_session.merge.assert_called_once()
     mock_db_session.execute.assert_called_once()
@@ -352,7 +352,7 @@ async def test_check_group_limit_active_user_has_tokens(
 
     service = DefaultLimitsService(mock_db_session, default_limits_config, mock_support_service)
 
-    service._update_user_contact_and_ensure_limit_entry = AsyncMock()
+    service._update_user_contact_and_create_limit_entry = AsyncMock()
     service._update_group_members_limits = AsyncMock()
 
     group_limit = GroupLimitEntry(chat_id=chat_id, last_ref_time=current_time, remain_tokens=50)
@@ -383,7 +383,7 @@ async def test_check_group_limit_active_users_no_tokens_other_user_has(
 
     service = DefaultLimitsService(mock_db_session, default_limits_config, mock_support_service)
 
-    service._update_user_contact_and_ensure_limit_entry = AsyncMock()
+    service._update_user_contact_and_create_limit_entry = AsyncMock()
     service._update_group_members_limits = AsyncMock()
 
     group_limit = GroupLimitEntry(chat_id=chat_id, last_ref_time=current_time, remain_tokens=50)
@@ -425,7 +425,7 @@ async def test_check_group_limit_all_users_insufficient_tokens(
 
     service = DefaultLimitsService(mock_db_session, default_limits_config, mock_support_service)
 
-    service._update_user_contact_and_ensure_limit_entry = AsyncMock()
+    service._update_user_contact_and_create_limit_entry = AsyncMock()
     service._update_group_members_limits = AsyncMock()
 
     group_limit = GroupLimitEntry(chat_id=chat_id, last_ref_time=current_time, remain_tokens=50)
