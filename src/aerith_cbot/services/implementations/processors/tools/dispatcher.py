@@ -16,6 +16,7 @@ from .members import (
     KickUserToolCommand,
     PinMessageToolCommand,
     RememberUserInfoToolCommand,
+    ThinkToolCommand,
     WaitForUserEndToolCommand,
 )
 
@@ -30,6 +31,7 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
         llm_config: LLMConfig,
     ):
         self._tools: dict[str, ToolCommand] = {
+            "think": ThinkToolCommand(),
             "ignore_message": IgnoreMessageToolCommand(db_session, llm_config),
             "wait_for_user_end": WaitForUserEndToolCommand(db_session, llm_config),
             "remember_user_info": RememberUserInfoToolCommand(memory_service, llm_config),

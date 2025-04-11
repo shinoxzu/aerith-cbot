@@ -50,22 +50,19 @@ class ChromaConfig(BaseModel):
 
 
 class AdditionalInstructions(BaseModel):
-    descr_edited: str
-    user_hasnt_desc_rights: str
-    name_changed: str
-    user_hasnt_name_rights: str
-    info_not_found: str
-    msg_ignored: str
-    user_kicked: str
-    user_hasnt_rights_kick: str
     msg_pinned: str
+    descr_edited: str
+    name_changed: str
+    user_kicked: str
+    user_hasnt_rights: str
+    info_not_found: str
     info_saved: str
-    too_long_listening: str
+    msg_ignored: str
     user_not_completed_thought: str
+    too_long_listening: str
     aerith_has_mentioned: str
     limit_in_group: str
     limit_in_private: str
-    info_about_user: str
 
 
 class LLMConfig(BaseModel):

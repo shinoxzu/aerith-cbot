@@ -29,13 +29,11 @@ def default_llm_config() -> LLMConfig:
         summarize_instruction="",
         additional_instructions=AdditionalInstructions(
             descr_edited="",
-            user_hasnt_desc_rights="",
             name_changed="",
-            user_hasnt_name_rights="",
+            user_hasnt_rights="",
             info_not_found="",
             msg_ignored="",
             user_kicked="",
-            user_hasnt_rights_kick="",
             msg_pinned="",
             info_saved="",
             too_long_listening="",
@@ -43,7 +41,6 @@ def default_llm_config() -> LLMConfig:
             aerith_has_mentioned="",
             limit_in_group="",
             limit_in_private="",
-            info_about_user="",
         ),
     )
 

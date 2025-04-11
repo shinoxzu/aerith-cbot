@@ -35,4 +35,4 @@ class KickUserToolCommand(ToolCommand):
         if is_admin:
             await self._bot.ban_chat_member(chat_id, params.user_id)
             return self._llm_config.additional_instructions.user_kicked
-        return self._llm_config.additional_instructions.user_hasnt_rights_kick
+        return self._llm_config.additional_instructions.user_hasnt_rights

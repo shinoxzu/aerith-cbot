@@ -35,4 +35,4 @@ class ChangeChatNameToolCommand(ToolCommand):
         if is_admin:
             await self._bot.set_chat_title(chat_id, params.name)
             return self._llm_config.additional_instructions.name_changed
-        return self._llm_config.additional_instructions.user_hasnt_name_rights
+        return self._llm_config.additional_instructions.user_hasnt_rights
