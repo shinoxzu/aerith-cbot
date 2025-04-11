@@ -5,10 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.config import LimitsConfig, LLMConfig
 from aerith_cbot.database.models import ChatState
-from aerith_cbot.services.abstractions import LimitsService
+from aerith_cbot.services.abstractions import LimitsService, SenderService, VoiceTranscriber
 from aerith_cbot.services.abstractions.models import ChatType, InputChat, InputMessage
 from aerith_cbot.services.abstractions.processors import GroupMessageProcessor
-from aerith_cbot.services.abstractions.sender_service import SenderService
 from aerith_cbot.services.abstractions.utils.mapping import input_msg_to_model_input
 from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
 
@@ -24,6 +23,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         limits_service: LimitsService,
         llm_config: LLMConfig,
         sender_service: SenderService,
+        voice_transcriber: VoiceTranscriber,
     ) -> None:
         super().__init__()
 
@@ -34,6 +34,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         self._limits_service = limits_service
         self._llm_config = llm_config
         self._sender_service = sender_service
+        self._voice_transcriber = voice_transcriber
 
     async def process(self, message: InputMessage) -> None:
         chat_state = await self._create_of_fetch_chat_state(message.chat)
@@ -104,6 +105,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
             chat_state.is_focused = False
             chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
+            chat_state.last_ignored_answer = int(time.time())
 
             await self._db_session.commit()
 
@@ -122,10 +124,12 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                     "image_url": {"url": message.photo_url, "detail": "low"},
                 }
             )
+
+        model_input_message = await input_msg_to_model_input(message, self._voice_transcriber)
         content.append(
             {
                 "type": "text",
-                "text": input_msg_to_model_input(message).model_dump_json(exclude_none=True),
+                "text": model_input_message.model_dump_json(exclude_none=True),
             }
         )
 

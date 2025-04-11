@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.config import LimitsConfig, LLMConfig
 from aerith_cbot.database.models import ChatState
+from aerith_cbot.services.abstractions import VoiceTranscriber
 from aerith_cbot.services.abstractions.models import InputMessage
 from aerith_cbot.services.implementations import DefaultLimitsService, DefaultSenderService
 from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
@@ -41,6 +42,8 @@ async def test_sleeping_chat_ignore(
 
     mock_sender_service = MagicMock(spec=DefaultSenderService)
 
+    mock_voice_transcriber = MagicMock(spec=VoiceTranscriber)
+
     private_message_processor = DefaultPrivateMessageProcessor(
         db_session=mock_db_session,
         message_queue=mock_message_queue,
@@ -48,6 +51,7 @@ async def test_sleeping_chat_ignore(
         limits_service=mock_limits_service,
         llm_config=default_llm_config,
         sender_service=mock_sender_service,
+        voice_transcriber=mock_voice_transcriber,
     )
 
     await private_message_processor.process(default_message_to_process)
@@ -72,6 +76,8 @@ async def test_addding_chat_state_if_none(
 
     mock_sender_service = MagicMock(spec=DefaultSenderService)
 
+    mock_voice_transcriber = MagicMock(spec=VoiceTranscriber)
+
     private_message_processor = DefaultPrivateMessageProcessor(
         db_session=mock_db_session,
         message_queue=MessageQueue(),
@@ -79,6 +85,7 @@ async def test_addding_chat_state_if_none(
         limits_service=mock_limits_service,
         llm_config=default_llm_config,
         sender_service=mock_sender_service,
+        voice_transcriber=mock_voice_transcriber,
     )
 
     await private_message_processor.process(default_message_to_process)
@@ -110,6 +117,8 @@ async def test_adding_message_to_queue(
 
     mock_sender_service = MagicMock(spec=DefaultSenderService)
 
+    mock_voice_transcriber = MagicMock(spec=VoiceTranscriber)
+
     private_message_processor = DefaultPrivateMessageProcessor(
         db_session=mock_db_session,
         message_queue=mock_message_queue,
@@ -117,6 +126,7 @@ async def test_adding_message_to_queue(
         limits_service=mock_limits_service,
         llm_config=default_llm_config,
         sender_service=mock_sender_service,
+        voice_transcriber=mock_voice_transcriber,
     )
 
     await private_message_processor.process(default_message_to_process)

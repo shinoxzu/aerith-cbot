@@ -7,6 +7,7 @@ authors = [{ name = "shinoxzu", email = "shinoxzu@gmail.com" }]
 requires-python = ">=3.13"
 dependencies = [
     "aiogram>=3.18",
+    "aiohttp>=3.11.16",
     "alembic>=1.14",
     "asyncpg>=0.30",
     "chatgpt-md-converter>=0.2",

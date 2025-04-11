@@ -6,6 +6,7 @@ from .permission_checker import PermissionChecker
 from .sender_service import SenderService
 from .stickers_service import StickersService
 from .support_service import SupportService
+from .voice_transcriber import VoiceTranscriber
 
 __all__ = (
     "MemoryService",
@@ -16,4 +17,5 @@ __all__ = (
     "PermissionChecker",
     "LimitsService",
     "SupportService",
+    "VoiceTranscriber",
 )

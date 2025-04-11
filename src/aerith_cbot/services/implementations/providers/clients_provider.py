@@ -1,5 +1,6 @@
 from typing import AsyncIterable
 
+import aiohttp
 from dishka import Provider, Scope, provide
 from openai import AsyncOpenAI
 
@@ -15,6 +16,12 @@ from aerith_cbot.config import (
 
 
 class ClientsProvider(Provider):
+    @provide(scope=Scope.APP)
+    async def aiohttp_client(self) -> AsyncIterable[aiohttp.ClientSession]:
+        client = aiohttp.ClientSession()
+        yield client
+        await client.close()
+
     @provide(scope=Scope.APP)
     async def openai_client(self, openai_config: OpenAIConfig) -> AsyncIterable[AsyncOpenAI]:
         client = AsyncOpenAI(api_key=openai_config.token)

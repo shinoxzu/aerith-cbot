@@ -12,6 +12,7 @@ def default_message_to_process() -> InputMessage:
         sender=InputUser(id=1, name="Петя"),
         reply_message=None,
         photo_url=None,
+        voice_url=None,
         text="привет",
         date="1 января, 2025",
         contains_aerith_mention=False,
