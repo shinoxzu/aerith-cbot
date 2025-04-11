@@ -5,13 +5,17 @@ from .models import ModelResponse
 
 class SenderService(ABC):
     @abstractmethod
-    async def send(self, chat_id: int, response: ModelResponse) -> None:
+    async def send_model_response(self, chat_id: int, response: ModelResponse) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    async def send_refusal(self, chat_id: int, refusal: str) -> None:
+    async def send_model_refusal(self, chat_id: int, refusal: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    async def send_ignoring(self, chat_id: int, phrase: str) -> None:
+    async def send_ignoring(self, chat_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def send_support_end_notify(self, chat_id: int) -> None:
         raise NotImplementedError

@@ -108,7 +108,7 @@ async def test_basic_chat_processing(mock_dependencies, mock_chat_completion):
     call_args = deps["openai_client"].chat.completions.create.call_args
     assert call_args[1]["tools"] == deps["llm_config"].tools
 
-    deps["sender_service"].send.assert_called_once()
+    deps["sender_service"].send_model_response.assert_called_once()
     deps["message_service"].add_messages.assert_called_once()
     deps["tool_dispatcher"].execute_tool.assert_not_called()
 
@@ -169,10 +169,10 @@ async def test_processing_with_refusal(mock_dependencies):
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
 
-    deps["sender_service"].send_refusal.assert_called_once_with(
+    deps["sender_service"].send_model_refusal.assert_called_once_with(
         123, "I cannot help with illegal activities."
     )
-    deps["sender_service"].send.assert_not_called()
+    deps["sender_service"].send_model_response.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -255,7 +255,7 @@ async def test_processing_with_tool_calls(mock_dependencies, mock_chat_completio
         == '{"text": ["Hello, this is a test response"], "reply_to_message_id": null, "sticker": null}'
     )
 
-    assert deps["sender_service"].send.call_count == 1
+    assert deps["sender_service"].send_model_response.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -383,7 +383,7 @@ async def test_rate_limit_retry(mock_dependencies, mock_chat_completion):
     deps["message_service"].shorten_history.assert_called_with(123)
     assert deps["message_service"].shorten_history.call_count == 2
 
-    deps["sender_service"].send.assert_called_once()
+    deps["sender_service"].send_model_response.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -409,7 +409,7 @@ async def test_api_error_retry(mock_dependencies, mock_chat_completion):
         await processor.process(chat_id=123, chat_type=ChatType.private)
 
         sleep_mock.assert_called_once()
-        deps["sender_service"].send.assert_called_once()
+        deps["sender_service"].send_model_response.assert_called_once()
         assert deps["openai_client"].chat.completions.create.call_count == 2
 
 

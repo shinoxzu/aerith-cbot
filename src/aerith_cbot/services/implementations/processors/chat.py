@@ -178,14 +178,16 @@ class DefaultChatProcessor(ChatProcessor):
         if result.choices[0].message.refusal is not None:
             self._logger.warning("Refusal in %s: %s", chat_id, result.choices[0].message.refusal)
 
-            await self._sender_service.send_refusal(chat_id, result.choices[0].message.refusal)
+            await self._sender_service.send_model_refusal(
+                chat_id, result.choices[0].message.refusal
+            )
 
         elif result.choices[0].message.content is not None:
             try:
                 structured_response = ModelResponse.model_validate_json(
                     result.choices[0].message.content
                 )
-                await self._sender_service.send(chat_id, structured_response)
+                await self._sender_service.send_model_response(chat_id, structured_response)
             except ValidationError as err:
                 self._logger.error(
                     "Cannot validate model response; response is %s",

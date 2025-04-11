@@ -1,5 +1,4 @@
 import logging
-import random
 import time
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,9 +50,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                 time.time() - chat_state.last_ignored_answer
                 > DefaultGroupMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
             ):
-                # TODO: generate phrase from LLM
-                phrase = self._fetch_random_ignore_phrase()
-                await self._sender_service.send_ignoring(message.chat.id, phrase)
+                await self._sender_service.send_ignoring(message.chat.id)
 
                 chat_state.last_ignored_answer = int(time.time())
                 await self._db_session.commit()
@@ -75,10 +72,8 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
                 chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
 
-                # send message "я занята, так что давай позже..."
                 if chat_state.last_ignored_answer >= time.time() + 60 * 30:
-                    phrase = self._fetch_random_ignore_phrase()
-                    await self._sender_service.send_ignoring(message.chat.id, phrase)
+                    await self._sender_service.send_ignoring(message.chat.id)
 
                     chat_state.last_ignored_answer = int(time.time())
                     await self._db_session.commit()
@@ -152,13 +147,3 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             await self._db_session.commit()
 
         return chat_state
-
-    def _fetch_random_ignore_phrase(self) -> str:
-        return random.choice(
-            [
-                "извини, но я сейчас занята. обязательно поговорим позже!!!",
-                "ой, сейчас не могу, давай чуть позже..",
-                "извини, сейчас не могу, позже наверстаем!",
-                "занята, но обещаю скоро откликнуться.......",
-            ]
-        )

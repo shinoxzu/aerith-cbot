@@ -1,5 +1,4 @@
 import logging
-import random
 import time
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,16 +50,7 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
                 time.time() - chat_state.last_ignored_answer
                 > DefaultPrivateMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
             ):
-                # TODO: generate phrase from LLM
-                phrase = random.choice(
-                    [
-                        "извини, но я сейчас занята. обязательно поговорим позже!!!",
-                        "ой, сейчас не могу, давай чуть позже..",
-                        "извини, сейчас не могу, позже наверстаем!",
-                        "занята, но обещаю скоро откликнуться.......",
-                    ]
-                )
-                await self._sender_service.send_ignoring(message.chat.id, phrase)
+                await self._sender_service.send_ignoring(message.chat.id)
 
                 chat_state.last_ignored_answer = int(time.time())
                 await self._db_session.commit()
