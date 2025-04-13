@@ -101,10 +101,10 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                         "content": self._llm_config.additional_instructions.aerith_has_mentioned,
                     }
                 )
-        # chat is focused and last message here chat was too long time ago, we unfocus it
+        # if chat is focused and inactive, we unfocus it
         else:
-            is_last_contact_too_long = await self._if_last_contact_too_long(message.chat.id)
-            if is_last_contact_too_long:
+            is_chat_inactive = await self._is_chat_inactive(message.chat.id)
+            if is_chat_inactive:
                 self._logger.info(
                     "Chat %s was active too long ago so we unfocus it", message.chat.id
                 )
@@ -167,7 +167,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
         return chat_state
 
-    async def _if_last_contact_too_long(self, chat_id) -> bool:
+    async def _is_chat_inactive(self, chat_id) -> bool:
         stmt = (
             select(UserGroupLastContact.last_contacted_time)
             .where(UserGroupLastContact.chat_id == chat_id)
