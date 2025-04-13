@@ -32,6 +32,7 @@ def default_llm_config() -> LLMConfig:
             descr_edited="",
             name_changed="",
             user_hasnt_rights="",
+            aerith_hasnt_rights="",
             info_not_found="",
             user_kicked="",
             msg_pinned="",

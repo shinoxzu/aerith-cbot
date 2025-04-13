@@ -4,7 +4,12 @@ from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.config import LLMConfig
-from aerith_cbot.services.abstractions import MemoryService, PermissionChecker, UserContextProvider
+from aerith_cbot.services.abstractions import (
+    MemoryService,
+    PermissionChecker,
+    UserContextProvider,
+    VoiceTranscriber,
+)
 
 from .base import ToolCommand, ToolCommandDispatcher, ToolExecutionResult
 from .members import (
@@ -12,6 +17,7 @@ from .members import (
     ChangeChatNameToolCommand,
     FetchInfoToolCommand,
     FetchUserInfoToolCommand,
+    GetChatInfoToolCommand,
     KickUserToolCommand,
     PinMessageToolCommand,
     RememberUserInfoToolCommand,
@@ -30,6 +36,7 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
         permission_checker: PermissionChecker,
         llm_config: LLMConfig,
         context_provider: UserContextProvider,
+        voice_transcriber: VoiceTranscriber,
     ):
         self._tools: dict[str, ToolCommand] = {
             "think": ThinkToolCommand(),
@@ -44,6 +51,7 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
             "kick_user": KickUserToolCommand(bot, permission_checker, llm_config),
             "update_user_context": UpdateUserContextCommand(context_provider, llm_config),
             "unfocus_chat": UnfocusChatToolCommand(db_session, llm_config),
+            "get_chat_info": GetChatInfoToolCommand(bot, llm_config, voice_transcriber),
         }
         self._logger = logging.getLogger(__name__)
 

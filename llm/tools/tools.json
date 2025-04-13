@@ -3,6 +3,21 @@
     {
       "type": "function",
       "function": {
+        "name": "get_chat_info",
+        "description": "Получает информацию о чате: название, описание и закреп",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    
+    {
+      "type": "function",
+      "function": {
         "name": "think",
         "description": "Позволяет подумать перед ответом",
         "strict": true,

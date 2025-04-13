@@ -59,6 +59,7 @@ class AdditionalInstructions(BaseModel):
     name_changed: str
     user_kicked: str
     user_hasnt_rights: str
+    aerith_hasnt_rights: str
     info_not_found: str
     info_saved: str
     aerith_has_mentioned: str
