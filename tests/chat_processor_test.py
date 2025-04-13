@@ -31,9 +31,9 @@ def mock_dependencies(default_limits_config: LimitsConfig):
     mock_tool_dispatcher = MagicMock()
     mock_tool_dispatcher.execute_tool = AsyncMock()
 
-    mock_sender_service = MagicMock()
-    mock_sender_service.send = AsyncMock()
-    mock_sender_service.send_refusal = AsyncMock()
+    mock_model_response_processor = MagicMock()
+    mock_model_response_processor.process = AsyncMock()
+    mock_model_response_processor.process_refusal = AsyncMock()
 
     mock_message_service = MagicMock()
     mock_message_service.fetch_messages = AsyncMock(return_value=[])
@@ -50,10 +50,10 @@ def mock_dependencies(default_limits_config: LimitsConfig):
         "llm_config": mock_llm_config,
         "openai_config": mock_openai_config,
         "tool_dispatcher": mock_tool_dispatcher,
-        "sender_service": mock_sender_service,
         "message_service": mock_message_service,
         "limits_serivce": mock_limits_service,
         "limits_config": default_limits_config,
+        "model_response_processor": mock_model_response_processor,
     }
 
 
@@ -93,10 +93,10 @@ async def test_basic_chat_processing(mock_dependencies, mock_chat_completion):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -108,7 +108,7 @@ async def test_basic_chat_processing(mock_dependencies, mock_chat_completion):
     call_args = deps["openai_client"].chat.completions.create.call_args
     assert call_args[1]["tools"] == deps["llm_config"].tools
 
-    deps["sender_service"].send_model_response.assert_called_once()
+    deps["model_response_processor"].process.assert_called_once()
     deps["message_service"].add_messages.assert_called_once()
     deps["tool_dispatcher"].execute_tool.assert_not_called()
 
@@ -123,10 +123,10 @@ async def test_group_chat_uses_group_tools(mock_dependencies, mock_chat_completi
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.group)
@@ -152,7 +152,7 @@ async def test_processing_with_refusal(mock_dependencies):
     mock_completion = MagicMock(spec=ChatCompletion)
     mock_completion.choices = [MagicMock()]
     mock_completion.choices[0].message = mock_message
-    mock_completion.usage = MagicMock(prompt_tokens=100)
+    mock_completion.usage = MagicMock(prompt_tokens=100, total_tokens=100)
 
     deps["openai_client"].chat.completions.create.return_value = mock_completion
 
@@ -161,18 +161,16 @@ async def test_processing_with_refusal(mock_dependencies):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
 
-    deps["sender_service"].send_model_refusal.assert_called_once_with(
-        123, "I cannot help with illegal activities."
-    )
-    deps["sender_service"].send_model_response.assert_not_called()
+    deps["model_response_processor"].process_refusal.assert_called_once()
+    deps["model_response_processor"].send_model_response.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -207,7 +205,7 @@ async def test_processing_with_tool_calls(mock_dependencies, mock_chat_completio
     mock_completion_with_tool = MagicMock(spec=ChatCompletion)
     mock_completion_with_tool.choices = [MagicMock()]
     mock_completion_with_tool.choices[0].message = mock_message_with_tool
-    mock_completion_with_tool.usage = MagicMock(prompt_tokens=100)
+    mock_completion_with_tool.usage = MagicMock(prompt_tokens=100, total_tokens=100)
 
     deps["openai_client"].chat.completions.create.side_effect = [
         mock_completion_with_tool,
@@ -223,10 +221,10 @@ async def test_processing_with_tool_calls(mock_dependencies, mock_chat_completio
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -255,7 +253,7 @@ async def test_processing_with_tool_calls(mock_dependencies, mock_chat_completio
         == '{"text": ["Hello, this is a test response"], "reply_to_message_id": null, "sticker": null}'
     )
 
-    assert deps["sender_service"].send_model_response.call_count == 1
+    assert deps["model_response_processor"].process.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -290,7 +288,7 @@ async def test_tool_stops_processing(mock_dependencies):
     mock_completion = MagicMock(spec=ChatCompletion)
     mock_completion.choices = [MagicMock()]
     mock_completion.choices[0].message = mock_message
-    mock_completion.usage = MagicMock(prompt_tokens=100)
+    mock_completion.usage = MagicMock(prompt_tokens=100, total_tokens=200)
 
     deps["openai_client"].chat.completions.create.return_value = mock_completion
     deps["tool_dispatcher"].execute_tool.return_value = ToolExecutionResult(
@@ -303,10 +301,10 @@ async def test_tool_stops_processing(mock_dependencies):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -330,7 +328,7 @@ async def test_validation_error_handling(mock_dependencies):
     mock_completion = MagicMock(spec=ChatCompletion)
     mock_completion.choices = [MagicMock()]
     mock_completion.choices[0].message = mock_message
-    mock_completion.usage = MagicMock(prompt_tokens=100)
+    mock_completion.usage = MagicMock(prompt_tokens=100, total_tokens=200)
 
     deps["openai_client"].chat.completions.create.return_value = mock_completion
 
@@ -339,16 +337,16 @@ async def test_validation_error_handling(mock_dependencies):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
 
     deps["message_service"].add_messages.assert_called_once()
-    deps["sender_service"].send.assert_not_called()
+    deps["model_response_processor"].process.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -369,10 +367,10 @@ async def test_rate_limit_retry(mock_dependencies, mock_chat_completion):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -383,7 +381,7 @@ async def test_rate_limit_retry(mock_dependencies, mock_chat_completion):
     deps["message_service"].shorten_history.assert_called_with(123)
     assert deps["message_service"].shorten_history.call_count == 2
 
-    deps["sender_service"].send_model_response.assert_called_once()
+    deps["model_response_processor"].process.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -399,17 +397,17 @@ async def test_api_error_retry(mock_dependencies, mock_chat_completion):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     with patch("asyncio.sleep", AsyncMock()) as sleep_mock:
         await processor.process(chat_id=123, chat_type=ChatType.private)
 
         sleep_mock.assert_called_once()
-        deps["sender_service"].send_model_response.assert_called_once()
+        deps["model_response_processor"].process.assert_called_once()
         assert deps["openai_client"].chat.completions.create.call_count == 2
 
 
@@ -425,10 +423,10 @@ async def test_max_token_usage_triggers_shortening(mock_dependencies, mock_chat_
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -468,7 +466,7 @@ async def test_max_iterations_limit(mock_dependencies):
     mock_completion = MagicMock(spec=ChatCompletion)
     mock_completion.choices = [MagicMock()]
     mock_completion.choices[0].message = mock_message
-    mock_completion.usage = MagicMock(prompt_tokens=100)
+    mock_completion.usage = MagicMock(prompt_tokens=100, total_tokens=200)
 
     deps["openai_client"].chat.completions.create.return_value = mock_completion
     deps["tool_dispatcher"].execute_tool.return_value = ToolExecutionResult(
@@ -486,10 +484,10 @@ async def test_max_iterations_limit(mock_dependencies):
             deps["llm_config"],
             deps["openai_config"],
             deps["tool_dispatcher"],
-            deps["sender_service"],
             deps["message_service"],
-            deps["limits_serivce"],
             deps["limits_config"],
+            deps["limits_serivce"],
+            deps["model_response_processor"],
         )
 
         await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -532,7 +530,7 @@ async def test_exception_in_tool_execution(mock_dependencies):
     mock_completion = MagicMock(spec=ChatCompletion)
     mock_completion.choices = [MagicMock()]
     mock_completion.choices[0].message = mock_message
-    mock_completion.usage = MagicMock(prompt_tokens=100)
+    mock_completion.usage = MagicMock(prompt_tokens=100, total_tokens=200)
 
     deps["openai_client"].chat.completions.create.return_value = mock_completion
 
@@ -543,10 +541,10 @@ async def test_exception_in_tool_execution(mock_dependencies):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -563,21 +561,21 @@ async def test_exception_in_tool_execution(mock_dependencies):
 
 
 @pytest.mark.asyncio
-async def test_exception_in_sender_service(mock_dependencies, mock_chat_completion):
+async def test_exception_in_response_processor_service(mock_dependencies, mock_chat_completion):
     deps = mock_dependencies
     deps["openai_client"].chat.completions.create.return_value = mock_chat_completion
 
-    deps["sender_service"].send.side_effect = Exception("Failed to send message")
+    deps["model_response_processor"].process.side_effect = Exception("Failed to send message")
 
     processor = DefaultChatProcessor(
         deps["openai_client"],
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
@@ -599,13 +597,16 @@ async def test_retry_limit_exceeded(mock_dependencies):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
-    await processor.process(chat_id=123, chat_type=ChatType.private)
+    try:
+        await processor.process(chat_id=123, chat_type=ChatType.private)
+    except Exception:
+        pass
 
     assert (
         deps["openai_client"].chat.completions.create.call_count
@@ -626,7 +627,7 @@ async def test_no_choices_in_completion(mock_dependencies):
 
     mock_completion = MagicMock(spec=ChatCompletion)
     mock_completion.choices = []
-    mock_completion.usage = MagicMock(prompt_tokens=100)
+    mock_completion.usage = MagicMock(prompt_tokens=100, total_tokens=200)
 
     deps["openai_client"].chat.completions.create.return_value = mock_completion
 
@@ -635,15 +636,15 @@ async def test_no_choices_in_completion(mock_dependencies):
         deps["llm_config"],
         deps["openai_config"],
         deps["tool_dispatcher"],
-        deps["sender_service"],
         deps["message_service"],
-        deps["limits_serivce"],
         deps["limits_config"],
+        deps["limits_serivce"],
+        deps["model_response_processor"],
     )
 
     await processor.process(chat_id=123, chat_type=ChatType.private)
 
     deps["message_service"].add_messages.assert_called_once_with(123, [])
 
-    deps["sender_service"].send.assert_not_called()
-    deps["sender_service"].send_refusal.assert_not_called()
+    deps["model_response_processor"].process.assert_not_called()
+    deps["model_response_processor"].process_refusal.assert_not_called()

@@ -41,7 +41,7 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
 
         # if chat is inactive for now cause of limits
         if chat_state.sleeping_till > int(time.time()):
-            self._logger.info(
+            self._logger.debug(
                 "Ignoring message cause sleeping (to %s) from chat: %s",
                 chat_state.sleeping_till,
                 message.chat,

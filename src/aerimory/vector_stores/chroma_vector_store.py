@@ -97,7 +97,7 @@ class ChromaVectorStore(BaseVectorStore):
             query_embeddings=[query_embedding], query_texts=[query], n_results=limit
         )
 
-        self._logger.info(
+        self._logger.debug(
             "Search result for object %s with query %s: %s", object_id, query, raw_search_result
         )
 

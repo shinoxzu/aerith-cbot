@@ -25,7 +25,7 @@ async def tg_msg_to_input_message(msg: Message, bot: Bot, is_inner=False) -> Inp
 
     photo_url = None
     if msg.photo is not None:
-        file_id = msg.photo[0].file_id
+        file_id = msg.photo[-1].file_id
         file = await bot.get_file(file_id)
         photo_url = f"https://api.telegram.org/file/bot{bot.token}/{file.file_path}"
 

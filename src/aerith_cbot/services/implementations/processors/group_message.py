@@ -41,20 +41,21 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
         # if chat is inactive for now cause of limits
         if chat_state.sleeping_till > int(time.time()):
-            self._logger.info(
+            if message.contains_aerith_mention:
+                if (
+                    time.time() - chat_state.last_ignored_answer
+                    > DefaultGroupMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
+                ):
+                    await self._sender_service.send_ignoring(message.chat.id)
+
+                    chat_state.last_ignored_answer = int(time.time())
+                    await self._db_session.commit()
+
+            self._logger.debug(
                 "Ignoring message cause sleeping (to %s) from chat: %s",
                 chat_state.sleeping_till,
                 message.chat,
             )
-
-            if (
-                time.time() - chat_state.last_ignored_answer
-                > DefaultGroupMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
-            ):
-                await self._sender_service.send_ignoring(message.chat.id)
-
-                chat_state.last_ignored_answer = int(time.time())
-                await self._db_session.commit()
 
             return
 
@@ -73,11 +74,13 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
                 chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
 
-                if chat_state.last_ignored_answer >= time.time() + 60 * 30:
+                if (
+                    time.time() - chat_state.last_ignored_answer
+                    > DefaultGroupMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
+                ):
                     await self._sender_service.send_ignoring(message.chat.id)
 
                     chat_state.last_ignored_answer = int(time.time())
-                    await self._db_session.commit()
 
                 await self._db_session.commit()
                 return
@@ -86,7 +89,6 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                 self._logger.info("Chat %s is focused now; processing message", message.chat.id)
 
                 chat_state.ignoring_streak = 0
-                chat_state.listening_streak = 0
                 chat_state.is_focused = True
 
                 await self._db_session.commit()

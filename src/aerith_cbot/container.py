@@ -20,6 +20,7 @@ from aerith_cbot.services.abstractions import (
 from aerith_cbot.services.abstractions.processors import (
     ChatProcessor,
     GroupMessageProcessor,
+    ModelResponseProcessor,
     PrivateMessageProcessor,
 )
 from aerith_cbot.services.implementations import (
@@ -38,6 +39,7 @@ from aerith_cbot.services.implementations.chat_dispatcher import ChatDispatcher,
 from aerith_cbot.services.implementations.processors import (
     DefaultChatProcessor,
     DefaultGroupMessageProcessor,
+    DefaultModelResponseProcessor,
     DefaultPrivateMessageProcessor,
 )
 from aerith_cbot.services.implementations.processors.tools import (
@@ -60,6 +62,7 @@ async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
     service_provider.provide(GroupPermissionChecker, provides=PermissionChecker)
     service_provider.provide(OpenAIHistorySummarizer, provides=HistorySummarizer)
     service_provider.provide(DefaultMessageService, provides=MessageService)
+    service_provider.provide(DefaultModelResponseProcessor, provides=ModelResponseProcessor)
     service_provider.provide(DefaultPrivateMessageProcessor, provides=PrivateMessageProcessor)
     service_provider.provide(DefaultGroupMessageProcessor, provides=GroupMessageProcessor)
     service_provider.provide(DefaultChatProcessor, provides=ChatProcessor)

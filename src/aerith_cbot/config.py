@@ -57,9 +57,6 @@ class AdditionalInstructions(BaseModel):
     user_hasnt_rights: str
     info_not_found: str
     info_saved: str
-    msg_ignored: str
-    user_not_completed_thought: str
-    too_long_listening: str
     aerith_has_mentioned: str
     limit_in_group: str
     limit_in_private: str

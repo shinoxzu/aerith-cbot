@@ -26,7 +26,6 @@ async def test_sleeping_chat_ignore(
             chat_id=1,
             is_focused=False,
             ignoring_streak=0,
-            listening_streak=0,
             sleeping_till=1000000000000000,
             last_ignored_answer=0,
         )
@@ -98,9 +97,7 @@ async def test_skipping_unfocused(
 ):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(
-        return_value=ChatState(
-            chat_id=1, is_focused=False, ignoring_streak=0, listening_streak=0, sleeping_till=0
-        )
+        return_value=ChatState(chat_id=1, is_focused=False, ignoring_streak=0, sleeping_till=0)
     )
     mock_db_session.add = MagicMock()
     mock_db_session.commit = AsyncMock()
@@ -149,9 +146,7 @@ async def test_focusing_unfocused(
 ):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(
-        return_value=ChatState(
-            chat_id=1, is_focused=False, ignoring_streak=0, listening_streak=0, sleeping_till=0
-        )
+        return_value=ChatState(chat_id=1, is_focused=False, ignoring_streak=0, sleeping_till=0)
     )
     mock_db_session.add = MagicMock()
     mock_db_session.commit = AsyncMock()
@@ -199,9 +194,7 @@ async def test_adding_message_to_queue(
 ):
     mock_db_session = MagicMock(spec=AsyncSession)
     mock_db_session.get = AsyncMock(
-        return_value=ChatState(
-            chat_id=1, is_focused=True, ignoring_streak=0, listening_streak=0, sleeping_till=0
-        )
+        return_value=ChatState(chat_id=1, is_focused=True, ignoring_streak=0, sleeping_till=0)
     )
     mock_db_session.add = MagicMock()
     mock_db_session.commit = AsyncMock()

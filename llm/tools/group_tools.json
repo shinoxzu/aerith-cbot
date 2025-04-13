@@ -3,21 +3,6 @@
     {
       "type": "function",
       "function": {
-        "name": "ignore_message",
-        "description": "Игнорирует сообщение, отправленное другому пользователю",
-        "strict": true,
-        "parameters": {
-          "additionalProperties": false,
-          "type": "object",
-          "properties": {},
-          "required": []
-        }
-      }
-    },
-
-    {
-      "type": "function",
-      "function": {
         "name": "change_chat_description",
         "description": "Меняет описание чата",
         "strict": true,

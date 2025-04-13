@@ -81,9 +81,7 @@ class DefaultSenderService(SenderService):
                     )
 
             await self._db_session.execute(
-                update(ChatState)
-                .where(ChatState.chat_id == chat_id)
-                .values(listening_streak=0, ignoring_streak=0)
+                update(ChatState).where(ChatState.chat_id == chat_id).values(ignoring_streak=0)
             )
             await self._db_session.commit()
 
@@ -91,9 +89,7 @@ class DefaultSenderService(SenderService):
         await self._bot.send_message(chat_id, refusal)
 
         await self._db_session.execute(
-            update(ChatState)
-            .where(ChatState.chat_id == chat_id)
-            .values(listening_streak=0, ignoring_streak=0)
+            update(ChatState).where(ChatState.chat_id == chat_id).values(ignoring_streak=0)
         )
         await self._db_session.commit()
 
