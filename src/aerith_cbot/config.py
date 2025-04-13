@@ -15,7 +15,9 @@ class DbConfig(BaseModel):
 
 class OpenAIConfig(BaseModel):
     token: str
-    model: str
+    group_model: str
+    private_model: str
+    private_support_model: str
     summarizer_model: str
     memory_llm_model: str
     memory_embedder_model: str
@@ -34,7 +36,9 @@ class LimitsConfig(BaseModel):
     private_tokens_limit: int
     private_support_tokens_limit: int
 
-    max_context_tokens: int
+    group_max_context_tokens: int
+    private_max_context_tokens: int
+    private_support_max_context_tokens: int
 
 
 class SupportConfig(BaseModel):

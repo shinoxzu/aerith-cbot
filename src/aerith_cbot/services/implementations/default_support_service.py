@@ -46,6 +46,7 @@ class DefaultSupportService(SupportService):
             )
             self._db_session.add(user_supporter)
         else:
+            # TODO: concurrency problems
             current_time = int(time.time())
             if user_supporter.end_timestamp < current_time:
                 user_supporter.end_timestamp = current_time

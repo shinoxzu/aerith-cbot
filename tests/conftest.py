@@ -52,7 +52,9 @@ def default_limits_config() -> LimitsConfig:
         group_per_user_max_other_usage_coeff=0.5,
         private_cooldown=1,
         private_tokens_limit=1,
-        max_context_tokens=1,
         group_per_support_user_tokens_limit=1,
         private_support_tokens_limit=1,
+        group_max_context_tokens=1,
+        private_max_context_tokens=1,
+        private_support_max_context_tokens=1,
     )
