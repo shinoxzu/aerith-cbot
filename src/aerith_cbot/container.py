@@ -16,13 +16,16 @@ from aerith_cbot.services.abstractions import (
     StickersService,
     SupportService,
     UserContextProvider,
+    VoiceTranscriber,
 )
 from aerith_cbot.services.abstractions.processors import (
     ChatProcessor,
     GroupMessageProcessor,
+    ModelResponseProcessor,
     PrivateMessageProcessor,
 )
 from aerith_cbot.services.implementations import (
+    AerimoryMemoryService,
     DefaultLimitsService,
     DefaultMessageService,
     DefaultSenderService,
@@ -30,14 +33,15 @@ from aerith_cbot.services.implementations import (
     DefaultSupportService,
     DefaultUserContextProvider,
     GroupPermissionChecker,
-    Mem0MemoryService,
     OpenAIHistorySummarizer,
+    OpenAIVoiceTranscriber,
     SupportNotifier,
 )
 from aerith_cbot.services.implementations.chat_dispatcher import ChatDispatcher, MessageQueue
 from aerith_cbot.services.implementations.processors import (
     DefaultChatProcessor,
     DefaultGroupMessageProcessor,
+    DefaultModelResponseProcessor,
     DefaultPrivateMessageProcessor,
 )
 from aerith_cbot.services.implementations.processors.tools import (
@@ -53,19 +57,21 @@ async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
     service_provider.provide(SupportNotifier, scope=Scope.APP)
     service_provider.provide(ChatDispatcher, scope=Scope.APP)
     service_provider.provide(MessageQueue, scope=Scope.APP)
+    service_provider.provide(OpenAIVoiceTranscriber, provides=VoiceTranscriber)
     service_provider.provide(DefaultSupportService, provides=SupportService)
     service_provider.provide(DefaultLimitsService, provides=LimitsService)
     service_provider.provide(DefaultToolCommandDispatcher, provides=ToolCommandDispatcher)
     service_provider.provide(GroupPermissionChecker, provides=PermissionChecker)
     service_provider.provide(OpenAIHistorySummarizer, provides=HistorySummarizer)
     service_provider.provide(DefaultMessageService, provides=MessageService)
+    service_provider.provide(DefaultModelResponseProcessor, provides=ModelResponseProcessor)
     service_provider.provide(DefaultPrivateMessageProcessor, provides=PrivateMessageProcessor)
     service_provider.provide(DefaultGroupMessageProcessor, provides=GroupMessageProcessor)
     service_provider.provide(DefaultChatProcessor, provides=ChatProcessor)
     service_provider.provide(DefaultSenderService, provides=SenderService)
     service_provider.provide(DefaultStickersService, provides=StickersService)
-    service_provider.provide(Mem0MemoryService, provides=MemoryService)
     service_provider.provide(DefaultUserContextProvider, provides=UserContextProvider)
+    service_provider.provide(AerimoryMemoryService, provides=MemoryService)
     service_provider.provide(lambda: bot, scope=Scope.APP, provides=Bot)
 
     container = make_async_container(

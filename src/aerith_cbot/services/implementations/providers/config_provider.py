@@ -2,12 +2,12 @@ from dishka import Provider, Scope, provide
 
 from aerith_cbot.config import (
     BotConfig,
+    ChromaConfig,
     Config,
     DbConfig,
     LimitsConfig,
     LLMConfig,
     OpenAIConfig,
-    QdrantConfig,
     SupportConfig,
 )
 
@@ -30,8 +30,8 @@ class ConfigProvider(Provider):
         return self.config.bot
 
     @provide(scope=Scope.APP)
-    def qdrant_config(self) -> QdrantConfig:
-        return self.config.qdrant
+    def chroma_config(self) -> ChromaConfig:
+        return self.config.chroma
 
     @provide(scope=Scope.APP)
     def openai_config(self) -> OpenAIConfig:

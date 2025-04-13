@@ -1,17 +1,15 @@
 import logging
-import random
 import time
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.config import LimitsConfig, LLMConfig
 from aerith_cbot.database.models import ChatState
-from aerith_cbot.services.abstractions import LimitsService
+from aerith_cbot.services.abstractions import LimitsService, SenderService, VoiceTranscriber
 from aerith_cbot.services.abstractions.models import ChatType, InputChat, InputMessage
 from aerith_cbot.services.abstractions.processors import PrivateMessageProcessor
-from aerith_cbot.services.abstractions.sender_service import SenderService
 from aerith_cbot.services.abstractions.utils.mapping import input_msg_to_model_input
-from aerith_cbot.services.implementations.chat_dispatcher.message_queue import MessageQueue
+from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
 
 
 class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
@@ -25,6 +23,7 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
         limits_service: LimitsService,
         llm_config: LLMConfig,
         sender_service: SenderService,
+        voice_transcriber: VoiceTranscriber,
     ) -> None:
         super().__init__()
 
@@ -35,13 +34,14 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
         self._limits_service = limits_service
         self._llm_config = llm_config
         self._sender_service = sender_service
+        self._voice_transcriber = voice_transcriber
 
     async def process(self, message: InputMessage) -> None:
         chat_state = await self._create_of_fetch_chat_state(message.chat)
 
         # if chat is inactive for now cause of limits
         if chat_state.sleeping_till > int(time.time()):
-            self._logger.info(
+            self._logger.debug(
                 "Ignoring message cause sleeping (to %s) from chat: %s",
                 chat_state.sleeping_till,
                 message.chat,
@@ -51,16 +51,7 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
                 time.time() - chat_state.last_ignored_answer
                 > DefaultPrivateMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
             ):
-                # TODO: generate phrase from LLM
-                phrase = random.choice(
-                    [
-                        "извини, но я сейчас занята. обязательно поговорим позже!!!",
-                        "ой, сейчас не могу, давай чуть позже..",
-                        "извини, сейчас не могу, позже наверстаем!",
-                        "занята, но обещаю скоро откликнуться.......",
-                    ]
-                )
-                await self._sender_service.send_ignoring(message.chat.id, phrase)
+                await self._sender_service.send_ignoring(message.chat.id)
 
                 chat_state.last_ignored_answer = int(time.time())
                 await self._db_session.commit()
@@ -75,6 +66,8 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
             self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
 
             chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
+            chat_state.last_ignored_answer = int(time.time())
+
             await self._db_session.commit()
 
             new_messages: list[dict] = [
@@ -94,10 +87,12 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
                     "image_url": {"url": message.photo_url, "detail": "low"},
                 }
             )
+
+        model_input_message = await input_msg_to_model_input(message, self._voice_transcriber)
         content.append(
             {
                 "type": "text",
-                "text": input_msg_to_model_input(message).model_dump_json(exclude_none=True),
+                "text": model_input_message.model_dump_json(exclude_none=True),
             }
         )
 

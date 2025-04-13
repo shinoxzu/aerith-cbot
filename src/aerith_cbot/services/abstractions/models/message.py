@@ -17,6 +17,7 @@ class InputMessage(BaseModel):
     sender: InputUser
     reply_message: "InputMessage | None"
     photo_url: str | None
+    voice_url: str | None
     text: str | None
     date: str
     contains_aerith_mention: bool

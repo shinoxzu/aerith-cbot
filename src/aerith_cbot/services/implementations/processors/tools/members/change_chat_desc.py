@@ -35,4 +35,4 @@ class ChangeChatDescToolCommand(ToolCommand):
         if is_admin:
             await self._bot.set_chat_description(chat_id, params.description)
             return self._llm_config.additional_instructions.descr_edited
-        return self._llm_config.additional_instructions.user_hasnt_desc_rights
+        return self._llm_config.additional_instructions.user_hasnt_rights

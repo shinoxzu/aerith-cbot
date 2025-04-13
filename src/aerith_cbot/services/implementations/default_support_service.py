@@ -2,12 +2,11 @@ import asyncio
 import logging
 import time
 
-from aiogram import Bot
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.database.models import UserSupport as UserSupportDbModel
-from aerith_cbot.services.abstractions import SupportService
+from aerith_cbot.services.abstractions import SenderService, SupportService
 from aerith_cbot.services.abstractions.models import UserSupport
 
 
@@ -15,11 +14,11 @@ class DefaultSupportService(SupportService):
     PROLONG_NOTIFY_MIN_TIME = 86_400
     PROLONG_MSG_INTERVAL = 0.3
 
-    def __init__(self, db_session: AsyncSession, bot: Bot) -> None:
+    def __init__(self, db_session: AsyncSession, sender_service: SenderService) -> None:
         super().__init__()
 
         self._db_session = db_session
-        self._bot = bot
+        self._sender_service = sender_service
         self._logger = logging.getLogger(__name__)
 
     async def is_active_supporter(self, user_id: int) -> bool:
@@ -43,7 +42,7 @@ class DefaultSupportService(SupportService):
 
         if user_supporter is None:
             user_supporter = UserSupportDbModel(
-                user_id=user_id, end_timestamp=int(time.time()) + interval, is_notified=True
+                user_id=user_id, end_timestamp=int(time.time()) + interval, is_notified=False
             )
             self._db_session.add(user_supporter)
         else:
@@ -52,6 +51,7 @@ class DefaultSupportService(SupportService):
                 user_supporter.end_timestamp = current_time
 
             user_supporter.end_timestamp = int(time.time()) + interval
+            user_supporter.is_notified = False
 
         await self._db_session.commit()
 
@@ -63,17 +63,16 @@ class DefaultSupportService(SupportService):
             UserSupportDbModel.is_notified == False,  # noqa
         )
         result = await self._db_session.execute(stmt)
-        support_users = result.scalars()
+        support_users = list(result.scalars())
+
+        self._logger.info("found %d users to notify", len(support_users))
 
         for support_user in support_users:
             try:
-                await self._bot.send_message(
-                    chat_id=support_user.user_id,
-                    text="привет! твоя поддержка заканчивается меньше, чем через сутки...",
-                )
+                await self._sender_service.send_support_end_notify(support_user.user_id)
             except Exception as err:
                 self._logger.error(
-                    "Cannot send message to %s cause of %s", support_user.user_id, err, exc_info=err
+                    "Cannot notify %s cause of %s", support_user.user_id, err, exc_info=err
                 )
             finally:
                 await asyncio.sleep(DefaultSupportService.PROLONG_MSG_INTERVAL)

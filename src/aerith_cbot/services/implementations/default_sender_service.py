@@ -2,8 +2,9 @@ import asyncio
 import logging
 import random
 
-from aiogram import Bot
+from aiogram import Bot, types
 from aiogram.enums import ParseMode
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from chatgpt_md_converter import telegram_format
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +27,7 @@ class DefaultSenderService(SenderService):
         self._db_session = db_session
         self._logger = logging.getLogger(__name__)
 
-    async def send(self, chat_id: int, response: ModelResponse) -> None:
+    async def send_model_response(self, chat_id: int, response: ModelResponse) -> None:
         reply_used = False
 
         if response.text or response.sticker:
@@ -80,28 +81,33 @@ class DefaultSenderService(SenderService):
                     )
 
             await self._db_session.execute(
-                update(ChatState)
-                .where(ChatState.chat_id == chat_id)
-                .values(listening_streak=0, ignoring_streak=0)
+                update(ChatState).where(ChatState.chat_id == chat_id).values(ignoring_streak=0)
             )
             await self._db_session.commit()
 
-    async def send_refusal(self, chat_id: int, refusal: str) -> None:
+    async def send_model_refusal(self, chat_id: int, refusal: str) -> None:
         await self._bot.send_message(chat_id, refusal)
 
         await self._db_session.execute(
-            update(ChatState)
-            .where(ChatState.chat_id == chat_id)
-            .values(listening_streak=0, ignoring_streak=0)
+            update(ChatState).where(ChatState.chat_id == chat_id).values(ignoring_streak=0)
         )
         await self._db_session.commit()
 
-    async def send_ignoring(self, chat_id: int, phrase: str) -> None:
+    async def send_ignoring(self, chat_id: int) -> None:
         await self._bot.send_chat_action(chat_id=chat_id, action="typing")
 
         random_sleep_interval = random.randint(1, 3)
         await asyncio.sleep(random_sleep_interval)
 
+        # TODO: generate phrase from LLM
+        phrase = random.choice(
+            [
+                "извини, но я сейчас занята. обязательно поговорим позже!!!",
+                "ой, сейчас не могу, давай чуть позже..",
+                "извини, сейчас не могу, позже наверстаем!",
+                "занята, но обещаю скоро откликнуться.......",
+            ]
+        )
         await self._bot.send_message(chat_id, phrase)
 
         if random.random() < DefaultSenderService.IGNORING_STICKER_CHANCE:
@@ -118,3 +124,12 @@ class DefaultSenderService(SenderService):
                 await self._bot.send_sticker(chat_id, sticker_file_id)
             else:
                 self._logger.debug("Cannot find sticker with emoji %s", emoji)
+
+    async def send_support_end_notify(self, chat_id: int) -> None:
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(types.InlineKeyboardButton(text="продлить!", callback_data="prolong_support"))
+        await self._bot.send_message(
+            chat_id=chat_id,
+            text="привет! твоя поддержка заканчивается меньше, чем через сутки...",
+            reply_markup=keyboard.as_markup(),
+        )

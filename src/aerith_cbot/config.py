@@ -40,32 +40,26 @@ class LimitsConfig(BaseModel):
 class SupportConfig(BaseModel):
     price: int
     duration: int
+    nearest_buy_interval: int
     provider_token: str
 
 
-class QdrantConfig(BaseModel):
-    collection_name: str
+class ChromaConfig(BaseModel):
     host: str
     port: int
 
 
 class AdditionalInstructions(BaseModel):
-    descr_edited: str
-    user_hasnt_desc_rights: str
-    name_changed: str
-    user_hasnt_name_rights: str
-    info_not_found: str
-    msg_ignored: str
-    user_kicked: str
-    user_hasnt_rights_kick: str
     msg_pinned: str
+    descr_edited: str
+    name_changed: str
+    user_kicked: str
+    user_hasnt_rights: str
+    info_not_found: str
     info_saved: str
-    too_long_listening: str
-    user_not_completed_thought: str
     aerith_has_mentioned: str
     limit_in_group: str
     limit_in_private: str
-    info_about_user: str
 
 
 class LLMConfig(BaseModel):
@@ -84,7 +78,7 @@ class Config(BaseModel):
     openai: OpenAIConfig
     limits: LimitsConfig
     support: SupportConfig
-    qdrant: QdrantConfig
+    chroma: ChromaConfig
     llm: LLMConfig
 
 

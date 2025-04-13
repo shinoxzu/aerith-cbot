@@ -12,12 +12,11 @@ from .members import (
     ChangeChatNameToolCommand,
     FetchInfoToolCommand,
     FetchUserInfoToolCommand,
-    IgnoreMessageToolCommand,
     KickUserToolCommand,
     PinMessageToolCommand,
     RememberUserInfoToolCommand,
+    ThinkToolCommand,
     UpdateUserContextCommand,
-    WaitForUserEndToolCommand,
 )
 
 
@@ -32,8 +31,7 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
         context_provider: UserContextProvider,
     ):
         self._tools: dict[str, ToolCommand] = {
-            "ignore_message": IgnoreMessageToolCommand(db_session, llm_config),
-            "wait_for_user_end": WaitForUserEndToolCommand(db_session, llm_config),
+            "think": ThinkToolCommand(),
             "remember_user_info": RememberUserInfoToolCommand(memory_service, llm_config),
             "fetch_info": FetchInfoToolCommand(memory_service, llm_config),
             "fetch_user_info": FetchUserInfoToolCommand(memory_service, llm_config),

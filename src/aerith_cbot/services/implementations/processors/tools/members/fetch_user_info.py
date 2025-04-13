@@ -22,8 +22,6 @@ class FetchUserInfoToolCommand(ToolCommand):
         self._llm_config = llm_config
 
     async def execute(self, arguments: str, chat_id: int) -> str:
-        # fetch info about many users in one requets
-
         params = FetchUserInfoParams.model_validate_json(arguments)
         result = await self._memory_service.search(str(params.user_id), params.query)
 

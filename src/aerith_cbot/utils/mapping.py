@@ -1,6 +1,3 @@
-import base64
-
-import aiohttp
 from aiogram import Bot
 from aiogram.types import Chat, Message, User
 
@@ -15,19 +12,28 @@ def tg_user_to_input_user(user: User) -> InputUser:
     return InputUser(id=user.id, name=user.full_name)
 
 
-async def tg_msg_to_input_message(msg: Message, bot: Bot) -> InputMessage:
+async def tg_msg_to_input_message(msg: Message, bot: Bot, is_inner=False) -> InputMessage:
     if msg.from_user is None:
         raise ValueError("Cannot parse messsage with sender_chat")
 
+    # max depth of replies is 1
     reply_message = None
-    if msg.reply_to_message is not None:
-        reply_message = await tg_msg_to_input_message(msg.reply_to_message, bot)
+    if msg.reply_to_message is not None and not is_inner:
+        reply_message = await tg_msg_to_input_message(msg.reply_to_message, bot, is_inner=True)
+
+    text = msg.text or msg.caption or (msg.sticker and msg.sticker.emoji)
 
     photo_url = None
     if msg.photo is not None:
-        file_id = msg.photo[0].file_id
+        file_id = msg.photo[-1].file_id
         file = await bot.get_file(file_id)
         photo_url = f"https://api.telegram.org/file/bot{bot.token}/{file.file_path}"
+
+    voice_url = None
+    if msg.voice is not None and msg.voice.duration < 1200:
+        file_id = msg.voice.file_id
+        file = await bot.get_file(file_id)
+        voice_url = f"https://api.telegram.org/file/bot{bot.token}/{file.file_path}"
 
     # text of the message will be one of:
     # * text
@@ -40,17 +46,11 @@ async def tg_msg_to_input_message(msg: Message, bot: Bot) -> InputMessage:
         sender=tg_user_to_input_user(msg.from_user),
         reply_message=reply_message,
         photo_url=photo_url,
-        text=msg.text or msg.caption or (msg.sticker and msg.sticker.emoji),
+        voice_url=voice_url,
+        text=text,
         date=str(msg.date),
         contains_aerith_mention=await _is_aerith_mentioned(msg, bot),
     )
-
-
-async def _fetch_image_as_base64(url: str) -> str:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            image_data = await response.read()
-            return base64.b64encode(image_data).decode("utf-8")
 
 
 async def _is_aerith_mentioned(msg: Message, bot: Bot) -> bool:

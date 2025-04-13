@@ -7,6 +7,7 @@ from .sender_service import SenderService
 from .stickers_service import StickersService
 from .support_service import SupportService
 from .user_context_provider import UserContextProvider
+from .voice_transcriber import VoiceTranscriber
 
 __all__ = (
     "MemoryService",
@@ -18,4 +19,5 @@ __all__ = (
     "LimitsService",
     "SupportService",
     "UserContextProvider",
+    "VoiceTranscriber",
 )

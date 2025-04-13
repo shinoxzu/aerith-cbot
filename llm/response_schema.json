@@ -8,18 +8,18 @@
       "properties": {
         "text": {
           "type": "array",
-          "description": "An array of text responses, can be null. Use this sometime for imitate thinking, like a people.",
+          "description": "Текстовые ответы. Можно разделить один ответ на несколько",
           "items": {
             "type": "string"
           }
         },
         "sticker": {
           "type": ["string", "null"],
-          "description": "An sticker response, can be null. Use this if you want to send a sticker. You must pass an EXACLTY one EMOJI here. DO NOT use rare emoji. Use this wisely."
+          "description": "Используй для отправки стикера. Необходимо указывать ТОЛЬКО ОДИН не редкий эмодзи. Не используй часто"
         },
         "reply_to_message_id": {
           "type": ["integer", "null"],
-          "description": "The message_id of a message the model wants to explicitly reply to. This should be set ONLY!!! if the referenced message is not the most recent one and there are other messages in between. Otherwise, leave it null!!!"
+          "description": "message_id, на которое необходимо ответить явно. Используй, если между твоим сообщением и указанным есть другие. Не используй часто"
         }
       },
       "required": ["text", "sticker", "reply_to_message_id"],

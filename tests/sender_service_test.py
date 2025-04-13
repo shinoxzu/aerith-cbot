@@ -27,7 +27,7 @@ async def test_send_text_message():
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
     )
-    await send_service.send(chat_id=1, response=response)
+    await send_service.send_model_response(chat_id=1, response=response)
 
     mock_db_session.execute.assert_called_once()
     mock_db_session.commit.assert_called_once()
@@ -58,7 +58,7 @@ async def test_send_empty_message():
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
     )
-    await send_service.send(chat_id=1, response=response)
+    await send_service.send_model_response(chat_id=1, response=response)
 
     mock_bot.send_chat_action.assert_not_called()
     mock_bot.send_message.assert_not_called()
@@ -93,7 +93,7 @@ async def test_send_empty_text_message():
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
     )
-    await send_service.send(chat_id=1, response=response)
+    await send_service.send_model_response(chat_id=1, response=response)
 
     mock_bot.send_chat_action.assert_called()
     mock_bot.send_message.assert_not_called()
@@ -125,7 +125,7 @@ async def test_send_sticker():
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
     )
-    await send_service.send(chat_id=1, response=response)
+    await send_service.send_model_response(chat_id=1, response=response)
 
     mock_bot.send_chat_action.assert_called()
     mock_bot.send_message.assert_not_called()
@@ -158,7 +158,7 @@ async def test_send_unknown_sticker():
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
     )
-    await send_service.send(chat_id=1, response=response)
+    await send_service.send_model_response(chat_id=1, response=response)
 
     mock_bot.send_chat_action.assert_called()
     mock_bot.send_message.assert_called_once()
@@ -191,7 +191,7 @@ async def test_send_text_instead_of_emoji():
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
     )
-    await send_service.send(chat_id=1, response=response)
+    await send_service.send_model_response(chat_id=1, response=response)
 
     mock_bot.send_chat_action.assert_called()
     mock_bot.send_message.assert_not_called()

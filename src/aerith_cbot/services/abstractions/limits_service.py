@@ -3,6 +3,10 @@ from abc import ABC, abstractmethod
 
 class LimitsService(ABC):
     @abstractmethod
+    async def reset_all_supporter_user_limits(self, user_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def check_private_limit(self, user_id: int) -> bool:
         raise NotImplementedError
 

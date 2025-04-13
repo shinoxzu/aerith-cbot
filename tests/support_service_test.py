@@ -1,11 +1,10 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.database.models import UserSupport
-from aerith_cbot.services.implementations import DefaultSupportService
+from aerith_cbot.services.implementations import DefaultLimitsService, DefaultSupportService
 
 
 @pytest.mark.asyncio
@@ -18,9 +17,9 @@ async def test_active_supporter():
         user_id=123, end_timestamp=end_support_time, is_notified=False
     )
 
-    mock_bot = MagicMock(spec=Bot)
+    mock_sender_service = MagicMock(spec=DefaultLimitsService)
 
-    support_service = DefaultSupportService(db_session=mock_db_session, bot=mock_bot)
+    support_service = DefaultSupportService(mock_db_session, mock_sender_service)
 
     with patch("time.time", return_value=end_support_time - 50):
         assert await support_service.is_active_supporter(123)
@@ -35,9 +34,9 @@ async def test_active_supporter_is_none():
     mock_db_session.get = AsyncMock()
     mock_db_session.get.return_value = None
 
-    mock_bot = MagicMock(spec=Bot)
+    mock_sender_service = MagicMock(spec=DefaultLimitsService)
 
-    support_service = DefaultSupportService(db_session=mock_db_session, bot=mock_bot)
+    support_service = DefaultSupportService(mock_db_session, mock_sender_service)
 
     with patch("time.time", return_value=50):
         assert not await support_service.is_active_supporter(123)
@@ -60,13 +59,13 @@ async def test_notify_supporter():
     mock_db_session.execute.return_value = mock_result
     mock_db_session.commit = AsyncMock()
 
-    mock_bot = MagicMock(spec=Bot)
-    mock_bot.send_message = AsyncMock()
+    mock_sender_service = MagicMock(spec=DefaultLimitsService)
+    mock_sender_service.send_support_end_notify = AsyncMock()
 
-    support_service = DefaultSupportService(db_session=mock_db_session, bot=mock_bot)
+    support_service = DefaultSupportService(mock_db_session, mock_sender_service)
 
     with patch("time.time", return_value=end_support_time - 50):
         with patch("asyncio.sleep", AsyncMock()):
             await support_service.notify_users_to_prolong()
 
-    assert mock_bot.send_message.call_count == 2
+    assert mock_sender_service.send_support_end_notify.call_count == 2
