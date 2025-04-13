@@ -1,7 +1,7 @@
 import logging
 import time
 
-from sqlalchemy import select, update
+from sqlalchemy import desc, select, update
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from aerith_cbot.database.models import UserGroupLastContact, UserPersonalContext
@@ -21,8 +21,9 @@ class DefaultUserContextProvider(UserContextProvider):
         user_ids = await self._get_last_contact_users(chat_id)
 
         stmt = select(UserPersonalContext).where(UserPersonalContext.user_id._in(user_ids))
-        result = await self._db_session.execute(stmt)
-        personal_context_list = [row[0] for row in result.all()]
+        result = await self._db_session.scalars(stmt)
+        personal_context_list = list(result)
+
         result_context = self._format_context(personal_context_list)
         return result_context
 
@@ -41,10 +42,11 @@ class DefaultUserContextProvider(UserContextProvider):
                 UserGroupLastContact.chat_id == chat_id,
                 UserGroupLastContact.last_contacted_time > time.time() - self.LAST_CONTACT_TIME,
             )
+            .order_by(desc(UserGroupLastContact.last_contacted_time))
             .limit(5)
         )
-        user_ids_result = await self._db_session.execute(stmt)
-        user_ids = [row[0] for row in user_ids_result.all()]
+        result = await self._db_session.scalars(stmt)
+        user_ids = list(result)
 
         return user_ids
 
