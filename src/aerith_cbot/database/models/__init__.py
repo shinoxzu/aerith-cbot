@@ -5,6 +5,7 @@ from .message import Message
 from .sticker import Sticker
 from .user_group_last_contact import UserGroupLastContact
 from .user_group_limit_entry import UserGroupLimitEntry
+from .user_personal_context import UserPersonalContext
 from .user_private_limit_entry import UserPrivateLimitEntry
 from .user_support import UserSupport
 
@@ -18,4 +19,5 @@ __all__ = (
     "UserPrivateLimitEntry",
     "GroupLimitEntry",
     "UserSupport",
+    "UserPersonalContext",
 )

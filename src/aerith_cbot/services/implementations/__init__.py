@@ -7,6 +7,7 @@ from .group_permission_checker import GroupPermissionChecker
 from .mem0_memory_service import Mem0MemoryService
 from .openai_history_summarizer import OpenAIHistorySummarizer
 from .support_notifier import SupportNotifier
+from .user_context_provider import DefaultUserContextProvider
 
 __all__ = (
     "Mem0MemoryService",
@@ -18,4 +19,5 @@ __all__ = (
     "DefaultLimitsService",
     "DefaultSupportService",
     "SupportNotifier",
+    "DefaultUserContextProvider",
 )

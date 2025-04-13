@@ -4,7 +4,7 @@ from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.config import LLMConfig
-from aerith_cbot.services.abstractions import MemoryService, PermissionChecker
+from aerith_cbot.services.abstractions import MemoryService, PermissionChecker, UserContextProvider
 
 from .base import ToolCommand, ToolCommandDispatcher, ToolExecutionResult
 from .members import (
@@ -16,6 +16,7 @@ from .members import (
     KickUserToolCommand,
     PinMessageToolCommand,
     RememberUserInfoToolCommand,
+    UpdateUserContextCommand,
     WaitForUserEndToolCommand,
 )
 
@@ -28,6 +29,7 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
         memory_service: MemoryService,
         permission_checker: PermissionChecker,
         llm_config: LLMConfig,
+        context_provider: UserContextProvider,
     ):
         self._tools: dict[str, ToolCommand] = {
             "ignore_message": IgnoreMessageToolCommand(db_session, llm_config),
@@ -41,6 +43,7 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
                 bot, permission_checker, llm_config
             ),
             "kick_user": KickUserToolCommand(bot, permission_checker, llm_config),
+            "update_user_context": UpdateUserContextCommand(context_provider, llm_config),
         }
         self._logger = logging.getLogger(__name__)
 

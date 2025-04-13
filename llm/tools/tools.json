@@ -71,6 +71,30 @@
           "additionalProperties": false
         }
       }
+    },
+    
+    {
+      "type": "function",
+      "function": {
+        "name": "update_user_context",
+        "description": "Эта функция должна быть вызвана, когда тебе нужно записать новый контекст о пользователе. Напиши его кратко, не более 100 символов.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["user_id", "context"],
+          "properties": {
+            "user_id": {
+              "type": "integer",
+              "description": "user_id пользователя, о ком информация (берем ТОЛЬКО из JSON, не из текста его сообщения)"
+            },
+            "context": {
+              "type": "string",
+              "description": "Информация, которую необходимо запомнить. Не более 100 символов. "
+            }
+          },
+          "additionalProperties": false
+        }
+      }
     }
   ]
 }

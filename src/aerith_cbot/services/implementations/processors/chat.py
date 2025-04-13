@@ -5,7 +5,12 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 from pydantic import ValidationError
 
 from aerith_cbot.config import LimitsConfig, LLMConfig, OpenAIConfig
-from aerith_cbot.services.abstractions import LimitsService, MessageService, SenderService
+from aerith_cbot.services.abstractions import (
+    LimitsService,
+    MessageService,
+    SenderService,
+    UserContextProvider,
+)
 from aerith_cbot.services.abstractions.models import (
     ChatType,
     ModelResponse,
@@ -29,6 +34,7 @@ class DefaultChatProcessor(ChatProcessor):
         message_service: MessageService,
         limits_service: LimitsService,
         limits_config: LimitsConfig,
+        context_provider: UserContextProvider,
     ) -> None:
         super().__init__()
 
@@ -41,10 +47,14 @@ class DefaultChatProcessor(ChatProcessor):
         self._message_service = message_service
         self._limits_config = limits_config
         self._limits_service = limits_service
+        self._context_provider = context_provider
 
     async def process(self, chat_id: int, chat_type: ChatType) -> None:
         old_messages: list[dict] = await self._message_service.fetch_messages(chat_id)
         new_messages: list[dict] = []
+
+        personal_context = await self._context_provider.provide_context(chat_id)
+        new_messages.append({"role": "system", "content": personal_context})
 
         try:
             if chat_type == ChatType.group:

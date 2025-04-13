@@ -15,6 +15,7 @@ from aerith_cbot.services.abstractions import (
     SenderService,
     StickersService,
     SupportService,
+    UserContextProvider,
 )
 from aerith_cbot.services.abstractions.processors import (
     ChatProcessor,
@@ -27,6 +28,7 @@ from aerith_cbot.services.implementations import (
     DefaultSenderService,
     DefaultStickersService,
     DefaultSupportService,
+    DefaultUserContextProvider,
     GroupPermissionChecker,
     Mem0MemoryService,
     OpenAIHistorySummarizer,
@@ -63,6 +65,7 @@ async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
     service_provider.provide(DefaultSenderService, provides=SenderService)
     service_provider.provide(DefaultStickersService, provides=StickersService)
     service_provider.provide(Mem0MemoryService, provides=MemoryService)
+    service_provider.provide(DefaultUserContextProvider, provides=UserContextProvider)
     service_provider.provide(lambda: bot, scope=Scope.APP, provides=Bot)
 
     container = make_async_container(
