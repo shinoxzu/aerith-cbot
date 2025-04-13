@@ -16,6 +16,7 @@ from .members import (
     PinMessageToolCommand,
     RememberUserInfoToolCommand,
     ThinkToolCommand,
+    UnfocusChatToolCommand,
     UpdateUserContextCommand,
 )
 
@@ -42,6 +43,7 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
             ),
             "kick_user": KickUserToolCommand(bot, permission_checker, llm_config),
             "update_user_context": UpdateUserContextCommand(context_provider, llm_config),
+            "unfocus_chat": UnfocusChatToolCommand(db_session, llm_config),
         }
         self._logger = logging.getLogger(__name__)
 
@@ -49,6 +51,6 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
         self._logger.debug("Running tool %s(%s) for chat %s", name, arguments, chat_id)
 
         result = await self._tools[name].execute(arguments, chat_id)
-        stop = name in ("ignore_message", "wait_for_user_end")
+        stop = name in ("ignore_message", "wait_for_user_end", "unfocus_chat")
 
         return ToolExecutionResult(result, stop)

@@ -1,3 +1,4 @@
+import time
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -198,6 +199,7 @@ async def test_adding_message_to_queue(
     )
     mock_db_session.add = MagicMock()
     mock_db_session.commit = AsyncMock()
+    mock_db_session.scalar = AsyncMock(return_value=int(time.time()))
 
     mock_message_queue = MagicMock(spec=MessageQueue)
     mock_message_queue.add = MagicMock()

@@ -66,7 +66,6 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
             self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
 
             chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
-            chat_state.last_ignored_answer = int(time.time())
 
             await self._db_session.commit()
 

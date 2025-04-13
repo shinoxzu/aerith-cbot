@@ -64,6 +64,7 @@ class AdditionalInstructions(BaseModel):
     aerith_has_mentioned: str
     limit_in_group: str
     limit_in_private: str
+    chat_unfocused_by_request: str
 
 
 class LLMConfig(BaseModel):

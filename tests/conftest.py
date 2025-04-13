@@ -39,6 +39,7 @@ def default_llm_config() -> LLMConfig:
             aerith_has_mentioned="",
             limit_in_group="",
             limit_in_private="",
+            chat_unfocused_by_request="",
         ),
     )
 

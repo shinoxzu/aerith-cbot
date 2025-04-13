@@ -7,6 +7,7 @@ from .kick_user import KickUserToolCommand
 from .pin_message import PinMessageToolCommand
 from .remember_user_info import RememberUserInfoToolCommand
 from .think import ThinkToolCommand
+from .unfocus_chat import UnfocusChatToolCommand
 from .update_user_context import UpdateUserContextCommand
 
 __all__ = (
@@ -20,4 +21,5 @@ __all__ = (
     "ChangeChatNameToolCommand",
     "UpdateUserContextCommand",
     "ThinkToolCommand",
+    "UnfocusChatToolCommand",
 )

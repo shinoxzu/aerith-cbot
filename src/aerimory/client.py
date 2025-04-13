@@ -29,7 +29,7 @@ class AerimoryClient:
         return memories
 
     async def add_memory(self, object_id: str, memory: str, overall_limit: int) -> None:
-        self._logger.info("Adding memory for object %s: %s", object_id, f"{memory[:50]}...")
+        self._logger.info("Adding memory for object %s: %s", object_id, memory)
 
         current_memories_count = await self._vector_store.count(object_id)
 

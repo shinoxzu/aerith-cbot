@@ -22,8 +22,8 @@ class OpenAILLM(BaseLLM):
     ) -> MemoriesStatus:
         similar_memories_text = ""
         for old_memory in old_memories:
-            created_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(old_memory.created_at))
-            updated_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(old_memory.updated_at))
+            created_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(old_memory.created_at))
+            updated_time = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(old_memory.updated_at))
             metadata_str = f"Создано: {created_time}, Обновлено: {updated_time}"
 
             similar_memories_text += (

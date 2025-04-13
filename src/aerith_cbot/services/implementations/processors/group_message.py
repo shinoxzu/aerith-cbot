@@ -1,10 +1,11 @@
 import logging
 import time
 
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.config import LimitsConfig, LLMConfig
-from aerith_cbot.database.models import ChatState
+from aerith_cbot.database.models import ChatState, UserGroupLastContact
 from aerith_cbot.services.abstractions import LimitsService, SenderService, VoiceTranscriber
 from aerith_cbot.services.abstractions.models import ChatType, InputChat, InputMessage
 from aerith_cbot.services.abstractions.processors import GroupMessageProcessor
@@ -14,6 +15,7 @@ from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
 
 class DefaultGroupMessageProcessor(GroupMessageProcessor):
     IGNORED_MESSAGE_MIN_INTERVAL = 1800
+    MAX_LAST_CONTACT_TIME = 3600
 
     def __init__(
         self,
@@ -99,6 +101,18 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                         "content": self._llm_config.additional_instructions.aerith_has_mentioned,
                     }
                 )
+        # chat is focused and last message here chat was too long time ago, we unfocus it
+        else:
+            is_last_contact_too_long = await self._if_last_contact_too_long(message.chat.id)
+            if is_last_contact_too_long:
+                self._logger.info(
+                    "Chat %s was active too long ago so we unfocus it", message.chat.id
+                )
+
+                chat_state.is_focused = False
+                await self._db_session.commit()
+
+                return
 
         # if there are no tokens available, we say goodbye to the user
         # also we make chat inactive by setting sleeping_till property
@@ -107,7 +121,6 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
             chat_state.is_focused = False
             chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
-            chat_state.last_ignored_answer = int(time.time())
 
             await self._db_session.commit()
 
@@ -153,3 +166,16 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             await self._db_session.commit()
 
         return chat_state
+
+    async def _if_last_contact_too_long(self, chat_id) -> bool:
+        stmt = (
+            select(UserGroupLastContact.last_contacted_time)
+            .where(UserGroupLastContact.chat_id == chat_id)
+            .order_by(desc(UserGroupLastContact.last_contacted_time))
+            .limit(1)
+        )
+        result = await self._db_session.scalar(stmt)
+        return (
+            result is None
+            or int(time.time()) - result > DefaultGroupMessageProcessor.MAX_LAST_CONTACT_TIME
+        )
