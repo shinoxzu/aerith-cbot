@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 class UserContextProvider(ABC):
     @abstractmethod
-    async def provide_context(self, chat_id: int) -> str:
+    async def provide_context(self, chat_id: int) -> str | None:
         raise NotImplementedError
 
     @abstractmethod

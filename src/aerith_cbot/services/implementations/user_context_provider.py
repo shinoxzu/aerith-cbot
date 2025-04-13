@@ -17,15 +17,17 @@ class DefaultUserContextProvider(UserContextProvider):
         self._db_session = db_session
         self._logger = logging.getLogger(__name__)
 
-    async def provide_context(self, chat_id: int) -> str:
+    async def provide_context(self, chat_id: int) -> str | None:
         user_ids = await self._get_last_contact_users(chat_id)
 
         stmt = select(UserPersonalContext).where(UserPersonalContext.user_id._in(user_ids))
         result = await self._db_session.scalars(stmt)
         personal_context_list = list(result)
 
-        result_context = self._format_context(personal_context_list)
-        return result_context
+        if personal_context_list:
+            return self._format_context(personal_context_list)
+        else:
+            return None
 
     async def update_context(self, user_id: int, context: str) -> None:
         await self._db_session.execute(

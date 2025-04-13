@@ -55,7 +55,8 @@ class DefaultChatProcessor(ChatProcessor):
         new_messages: list[dict] = []
 
         personal_context = await self._context_provider.provide_context(chat_id)
-        new_messages.append({"role": "system", "content": personal_context})
+        if personal_context is not None:
+            new_messages.append({"role": "system", "content": personal_context})
 
         if chat_type == ChatType.group:
             tools = self._llm_config.tools + self._llm_config.group_tools
