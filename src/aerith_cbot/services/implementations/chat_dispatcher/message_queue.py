@@ -1,5 +1,6 @@
 import copy
 import logging
+import random
 import time
 
 from aerith_cbot.services.abstractions.models import ChatType
@@ -17,7 +18,7 @@ class LocalQueueEntry:
 
 
 class MessageQueue:
-    TIME_LIMIT = 2
+    TIME_LIMIT_UPPER_BOUND = 4
     COUNT_LIMIT = 4
 
     def __init__(self) -> None:
@@ -39,7 +40,8 @@ class MessageQueue:
 
         for chat_id, entry in self._local_entries.items():
             if entry.messages and (
-                current_time - entry.last_updated > MessageQueue.TIME_LIMIT
+                current_time - entry.last_updated
+                > random.randint(0, MessageQueue.TIME_LIMIT_UPPER_BOUND)
                 or len(entry.messages) > MessageQueue.COUNT_LIMIT
             ):
                 ready_entries.append(copy.deepcopy(entry))

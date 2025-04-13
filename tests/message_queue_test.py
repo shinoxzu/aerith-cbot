@@ -14,7 +14,7 @@ def test_fetch_ready_entries_by_time(mock_time):
 
     assert len(queue.fetch_ready_entries()) == 0
 
-    mock_time.return_value = start_time + MessageQueue.TIME_LIMIT + 0.1
+    mock_time.return_value = start_time + MessageQueue.TIME_LIMIT_UPPER_BOUND + 0.1
 
     ready_entries = queue.fetch_ready_entries()
 
@@ -52,7 +52,7 @@ def test_clear(mock_time):
 
     queue.clear(123)
 
-    mock_time.return_value = 1000.0 + MessageQueue.TIME_LIMIT + 0.1
+    mock_time.return_value = 1000.0 + MessageQueue.TIME_LIMIT_UPPER_BOUND + 0.1
 
     ready_entries = queue.fetch_ready_entries()
 
@@ -68,25 +68,26 @@ def test_latest_update_not_ready(mock_time):
     queue = MessageQueue()
     queue.add(123, ChatType.private, [{"role": "user", "content": "Initial message"}])
 
-    # still not ready cause 0 seconds passed since last adding
-    assert len(queue.fetch_ready_entries()) == 0
+    with patch("random.randint", return_value=MessageQueue.TIME_LIMIT_UPPER_BOUND):
+        # still not ready cause 0 seconds passed since last adding
+        assert len(queue.fetch_ready_entries()) == 0
 
-    current_time += MessageQueue.TIME_LIMIT - 0.5
-    mock_time.return_value = current_time
+        current_time += MessageQueue.TIME_LIMIT_UPPER_BOUND - 0.5
+        mock_time.return_value = current_time
 
-    queue.add(123, ChatType.private, [{"role": "user", "content": "New message"}])
+        queue.add(123, ChatType.private, [{"role": "user", "content": "New message"}])
 
-    # same: still not ready cause 0 seconds passed since last adding
-    assert len(queue.fetch_ready_entries()) == 0
+        # same: still not ready cause 0 seconds passed since last adding
+        assert len(queue.fetch_ready_entries()) == 0
 
-    current_time += MessageQueue.TIME_LIMIT - 0.5
-    mock_time.return_value = current_time
+        current_time += MessageQueue.TIME_LIMIT_UPPER_BOUND - 0.5
+        mock_time.return_value = current_time
 
-    # not ready cause only MessageQueue.TIME_LIMIT - 0.5 seconds passed, so 0.5 seconds left
-    assert len(queue.fetch_ready_entries()) == 0
+        # not ready cause only MessageQueue.TIME_LIMIT - 0.5 seconds passed, so 0.5 seconds left
+        assert len(queue.fetch_ready_entries()) == 0
 
-    current_time += 1
-    mock_time.return_value = current_time
+        current_time += 1
+        mock_time.return_value = current_time
 
-    # wait fot another second and now entries are available
-    assert len(queue.fetch_ready_entries()) == 1
+        # wait fot another second and now entries are available
+        assert len(queue.fetch_ready_entries()) == 1
