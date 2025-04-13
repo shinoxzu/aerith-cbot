@@ -32,6 +32,7 @@ class DefaultUserContextProvider(UserContextProvider):
             .where(UserPersonalContext.user_id == user_id)
             .values(context=context)
         )
+        await self._db_session.commit()
 
     async def _get_last_contact_users(self, chat_id: int) -> list[int]:
         stmt = (
