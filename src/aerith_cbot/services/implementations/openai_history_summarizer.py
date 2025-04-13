@@ -20,11 +20,9 @@ class OpenAIHistorySummarizer(HistorySummarizer):
         self._logger = logging.getLogger(__name__)
 
     async def summarize(self, messages_to_summarize: list[dict]) -> str:
-        messages = (
-            [{"role": "developer", "content": self._llm_config.summarize_instruction}]
-            + messages_to_summarize
-            + [{"role": "developer", "content": self._llm_config.summarize_instruction}]
-        )
+        messages = [
+            {"role": "developer", "content": self._llm_config.summarize_instruction}
+        ] + messages_to_summarize
 
         content = ""
 

@@ -95,14 +95,19 @@
         }
       }
     },
-    
+
     {
       "type": "function",
       "function": {
         "name": "unfocus_chat",
         "description": "Вызывай эту функцию, если пользователи очень просят тебя больше не общаться с ними",
         "strict": true,
-        "parameters": {}
+        "parameters": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": false
+        }
       }
     }
   ]

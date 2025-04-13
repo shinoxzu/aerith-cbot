@@ -33,9 +33,7 @@ class DefaultMessageService(MessageService):
         # the problem is messages with 'tool' role must be a response to messages
         messages_to_summarize: list[Message] = messages[: len(messages) // 2]
         for ci in range(len(messages) // 2, len(messages)):
-            if messages[ci].data["role"] == "tool" or (
-                "tool_calls" in messages[ci].data and messages[ci].data["tool_calls"]
-            ):
+            if messages[ci].data["role"] == "tool" or ("tool_calls" in messages[ci].data):
                 messages_to_summarize.append(messages[ci])
             else:
                 break
