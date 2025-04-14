@@ -1,4 +1,5 @@
 from aiogram import Bot, Router, types
+from aiohttp import ClientSession
 from dishka import FromDishka
 
 from aerith_cbot.filters import ChatTypeFilter
@@ -14,6 +15,7 @@ async def private_message_handler(
     message: types.Message,
     bot: Bot,
     processor: FromDishka[PrivateMessageProcessor],
+    client_session: FromDishka[ClientSession],
 ):
-    input_message = await tg_msg_to_input_message(message, bot)
+    input_message = await tg_msg_to_input_message(message, bot, client_session)
     await processor.process(input_message)

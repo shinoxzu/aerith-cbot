@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Bot, exceptions
+from aiohttp import ClientSession
 
 from aerith_cbot.config import LLMConfig
 from aerith_cbot.services.abstractions import VoiceTranscriber
@@ -16,12 +17,14 @@ class GetChatInfoToolCommand(ToolCommand):
         bot: Bot,
         llm_config: LLMConfig,
         voice_transcriber: VoiceTranscriber,
+        client_session: ClientSession,
     ) -> None:
         super().__init__()
 
         self._bot = bot
         self._llm_config = llm_config
         self._voice_transcriber = voice_transcriber
+        self._client_session = client_session
         self._logger = logging.getLogger(__name__)
 
     async def execute(self, arguments: str, chat_id: int) -> str:
@@ -34,7 +37,9 @@ class GetChatInfoToolCommand(ToolCommand):
             }
 
             if chat.pinned_message is not None:
-                pinned_input_message = await tg_msg_to_input_message(chat.pinned_message, self._bot)
+                pinned_input_message = await tg_msg_to_input_message(
+                    chat.pinned_message, self._bot, self._client_session
+                )
                 pinned_model_input_message = await input_msg_to_model_input(
                     pinned_input_message, self._voice_transcriber
                 )
