@@ -2,7 +2,7 @@ import logging
 import time
 
 from sqlalchemy import desc, select
-from sqlalchemy.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerith_cbot.database.models import UserGroupLastContact, UserPersonalContext
 from aerith_cbot.services.abstractions import UserContextProvider
