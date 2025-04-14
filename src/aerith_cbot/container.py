@@ -7,6 +7,7 @@ from dishka.integrations.aiogram import AiogramProvider
 from aerith_cbot.config import Config
 from aerith_cbot.database import DataBaseProvider
 from aerith_cbot.services.abstractions import (
+    ChatMigrationService,
     HistorySummarizer,
     LimitsService,
     MemoryService,
@@ -26,6 +27,7 @@ from aerith_cbot.services.abstractions.processors import (
 )
 from aerith_cbot.services.implementations import (
     AerimoryMemoryService,
+    DefaultChatMigrationService,
     DefaultLimitsService,
     DefaultMessageService,
     DefaultSenderService,
@@ -71,6 +73,7 @@ async def init_dishka_container(config: Config, bot: Bot) -> AsyncContainer:
     service_provider.provide(DefaultSenderService, provides=SenderService)
     service_provider.provide(DefaultStickersService, provides=StickersService)
     service_provider.provide(DefaultUserContextProvider, provides=UserContextProvider)
+    service_provider.provide(DefaultChatMigrationService, provides=ChatMigrationService)
     service_provider.provide(AerimoryMemoryService, provides=MemoryService)
     service_provider.provide(lambda: bot, scope=Scope.APP, provides=Bot)
 

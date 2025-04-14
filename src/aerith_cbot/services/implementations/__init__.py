@@ -1,4 +1,5 @@
 from .aerimory_memory_service import AerimoryMemoryService
+from .default_chat_migration_service import DefaultChatMigrationService
 from .default_limits_service import DefaultLimitsService
 from .default_message_service import DefaultMessageService
 from .default_sender_service import DefaultSenderService
@@ -22,4 +23,5 @@ __all__ = (
     "SupportNotifier",
     "DefaultUserContextProvider",
     "OpenAIVoiceTranscriber",
+    "DefaultChatMigrationService",
 )

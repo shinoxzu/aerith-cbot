@@ -1,3 +1,4 @@
+from .chat_migration_service import ChatMigrationService
 from .history_summarizer import HistorySummarizer
 from .limits_service import LimitsService
 from .memory_service import MemoryService
@@ -20,4 +21,5 @@ __all__ = (
     "SupportService",
     "UserContextProvider",
     "VoiceTranscriber",
+    "ChatMigrationService",
 )
