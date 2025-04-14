@@ -12,22 +12,6 @@ class AerimoryClient:
         self._llm = llm
         self._logger = logging.getLogger(__name__)
 
-    def _entries_to_memories(self, entries: list[VectorStoreEntry]) -> list[Memory]:
-        memories = []
-
-        for entry in entries:
-            memories.append(
-                Memory(
-                    id=entry.id,
-                    memory=entry.text,
-                    distance=entry.distance,
-                    created_at=int(entry.metadata["created_at"]),
-                    updated_at=int(entry.metadata["updated_at"]),
-                )
-            )
-
-        return memories
-
     async def add_memory(self, object_id: str, memory: str, overall_limit: int) -> None:
         self._logger.info("Adding memory for object %s: %s", object_id, memory)
 
@@ -93,5 +77,21 @@ class AerimoryClient:
     async def search(self, object_id: str, query: str, limit: int = 5) -> list[Memory]:
         entries = await self._vector_store.search(object_id, query, limit)
         memories = self._entries_to_memories(entries)
+
+        return memories
+
+    def _entries_to_memories(self, entries: list[VectorStoreEntry]) -> list[Memory]:
+        memories = []
+
+        for entry in entries:
+            memories.append(
+                Memory(
+                    id=entry.id,
+                    memory=entry.text,
+                    distance=entry.distance,
+                    created_at=int(entry.metadata["created_at"]),
+                    updated_at=int(entry.metadata["updated_at"]),
+                )
+            )
 
         return memories
