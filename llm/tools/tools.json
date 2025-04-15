@@ -4,7 +4,7 @@
       "type": "function",
       "function": {
         "name": "get_chat_info",
-        "description": "Получает информацию о чате: название, описание и закреп",
+        "description": "Получает информацию о чате: название, описание и закрепленное сообщение",
         "strict": true,
         "parameters": {
           "type": "object",
@@ -19,7 +19,7 @@
       "type": "function",
       "function": {
         "name": "remember_user_info",
-        "description": "Запоминает информацию о пользователе: его предпочтения, друзей, где он побывал и так далее. Не вызывай часто",
+        "description": "Запоминает информацию о пользователе: его предпочтения, друзей, где он побывал и другое",
         "strict": true,
         "parameters": {
           "type": "object",
