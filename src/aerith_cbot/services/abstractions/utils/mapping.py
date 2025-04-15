@@ -25,4 +25,5 @@ async def input_msg_to_model_input(
         date=msg.date,
         reply_message=reply_message,
         text=text,
+        meta=msg.meta,
     )

@@ -15,7 +15,7 @@ from aerith_cbot.services.implementations.chat_dispatcher import MessageQueue
 
 class DefaultGroupMessageProcessor(GroupMessageProcessor):
     IGNORED_MESSAGE_MIN_INTERVAL = 1800
-    MAX_LAST_CONTACT_TIME = 3600
+    MAX_LAST_CONTACT_TIME = 1800
 
     def __init__(
         self,
@@ -61,6 +61,19 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
             return
 
+        if chat_state.is_focused:
+            # if chat is focused and inactive, we unfocus it
+            is_chat_inactive = await self._is_chat_inactive(message.chat.id)
+            if is_chat_inactive:
+                self._logger.info(
+                    "Chat %s was active too long ago so we unfocus it", message.chat.id
+                )
+
+                chat_state.is_focused = False
+                await self._db_session.commit()
+
+                return
+
         new_messages: list[dict] = []
 
         can_use = await self._limits_service.check_group_limit(message.sender.id, message.chat.id)
@@ -69,12 +82,15 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             self._logger.debug("Message from unfocused chat: %s", message.chat.id)
 
             if not message.contains_aerith_mention:
+                if not can_use:
+                    chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
+                    await self._db_session.commit()
                 return
 
             if not can_use:
                 self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
 
-                chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
+                chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
 
                 if (
                     time.time() - chat_state.last_ignored_answer
@@ -101,18 +117,14 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                         "content": self._llm_config.additional_instructions.aerith_has_mentioned,
                     }
                 )
-        # if chat is focused and inactive, we unfocus it
-        else:
-            is_chat_inactive = await self._is_chat_inactive(message.chat.id)
-            if is_chat_inactive:
-                self._logger.info(
-                    "Chat %s was active too long ago so we unfocus it", message.chat.id
-                )
 
-                chat_state.is_focused = False
-                await self._db_session.commit()
-
-                return
+        if message.is_aerith_joined:
+            new_messages.append(
+                {
+                    "role": "system",
+                    "content": self._llm_config.additional_instructions.aerith_chat_join,
+                }
+            )
 
         # if there are no tokens available, we say goodbye to the user
         # also we make chat inactive by setting sleeping_till property
@@ -120,7 +132,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
 
             chat_state.is_focused = False
-            chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
+            chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
 
             await self._db_session.commit()
 
@@ -161,7 +173,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
         if chat_state is None:
             self._logger.debug("Adding new chat_state for chat: %s", chat)
 
-            chat_state = ChatState(chat_id=chat.id, sleeping_till=0, is_focused=False)
+            chat_state = ChatState(chat_id=chat.id, sleeping_till=0, is_focused=True)
             self._db_session.add(chat_state)
             await self._db_session.commit()
 

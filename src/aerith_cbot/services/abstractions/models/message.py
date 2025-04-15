@@ -21,3 +21,5 @@ class InputMessage(BaseModel):
     text: str | None
     date: str
     contains_aerith_mention: bool
+    is_aerith_joined: bool
+    meta: str | None

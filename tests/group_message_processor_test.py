@@ -69,6 +69,7 @@ async def test_addding_chat_state_if_none(
     mock_db_session.get = AsyncMock(return_value=None)
     mock_db_session.add = MagicMock()
     mock_db_session.commit = AsyncMock()
+    mock_db_session.scalar = AsyncMock(return_value=0)
 
     mock_limits_service = MagicMock(spec=DefaultLimitsService)
     mock_limits_service.check_private_limit = AsyncMock(return_value=False)
@@ -134,6 +135,8 @@ async def test_skipping_unfocused(
             text="привет",
             date="1 января, 2025",
             contains_aerith_mention=False,
+            is_aerith_joined=False,
+            meta=None,
         )
     )
 
@@ -183,6 +186,8 @@ async def test_focusing_unfocused(
             text="привет",
             date="1 января, 2025",
             contains_aerith_mention=True,
+            is_aerith_joined=False,
+            meta=None,
         )
     )
 
@@ -232,6 +237,8 @@ async def test_adding_message_to_queue(
             text="привет",
             date="1 января, 2025",
             contains_aerith_mention=False,
+            is_aerith_joined=False,
+            meta=None,
         )
     )
 
