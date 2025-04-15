@@ -18,26 +18,6 @@
     {
       "type": "function",
       "function": {
-        "name": "think",
-        "description": "Позволяет подумать перед ответом",
-        "strict": true,
-        "parameters": {
-          "type": "object",
-          "required": ["thoughts"],
-          "properties": {
-            "thoughts": {
-              "type": "string",
-              "description": "Твои мысли. Пошагово реши, что следует ответить пользователю"
-            }
-          },
-          "additionalProperties": false
-        }
-      }
-    },
-    
-    {
-      "type": "function",
-      "function": {
         "name": "remember_user_info",
         "description": "Запоминает информацию о пользователе: его предпочтения, друзей, где он побывал и так далее. Не вызывай часто",
         "strict": true,

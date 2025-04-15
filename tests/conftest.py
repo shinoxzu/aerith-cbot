@@ -41,6 +41,7 @@ def default_llm_config() -> LLMConfig:
             limit_in_group="",
             limit_in_private="",
             chat_unfocused_by_request="",
+            you_call_too_many_tools="",
         ),
     )
 

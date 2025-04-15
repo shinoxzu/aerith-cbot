@@ -21,7 +21,7 @@ from aerith_cbot.services.implementations.processors.tools import ToolCommandDis
 class DefaultChatProcessor(ChatProcessor):
     MAX_LLM_CALL_ATTEMPTS = 3
     MAX_LLM_CALL_ITERATIONS = 10
-    MAX_TOOL_CALL_ITERATIONS = 10
+    MAX_TOOL_CALL_ITERATIONS = 5
 
     def __init__(
         self,
@@ -75,6 +75,9 @@ class DefaultChatProcessor(ChatProcessor):
             else:
                 model_to_use = self._openai_config.private_model
                 max_context_tokens = self._limits_config.private_max_context_tokens
+
+        self._logger.info("Used model for chat %s: %s", chat_id, model_to_use)
+        self._logger.info("max_context_tokens for chat %s: %s", chat_id, max_context_tokens)
 
         if personal_context is not None:
             new_messages.append({"role": "system", "content": personal_context})
@@ -156,6 +159,13 @@ class DefaultChatProcessor(ChatProcessor):
                 if current_tool_calls >= DefaultChatProcessor.MAX_TOOL_CALL_ITERATIONS:
                     self._logger.warning(
                         "Tool call limit in %s (last_call: %s)", chat_id, tool_call
+                    )
+
+                    new_messages.append(
+                        {
+                            "role": "system",
+                            "content": self._llm_config.additional_instructions.you_call_too_many_tools,
+                        }
                     )
 
                     break
@@ -302,12 +312,12 @@ class DefaultChatProcessor(ChatProcessor):
             )
             tokens_to_subtract = (
                 result.usage.prompt_tokens_details.cached_tokens // 4
-                + new_prompt_tokens
+                + new_prompt_tokens // 2
                 + result.usage.completion_tokens * 2
             )
         else:
             tokens_to_subtract = (
-                result.usage.completion_tokens * 2 + result.usage.prompt_tokens // 2
+                result.usage.completion_tokens * 2 + result.usage.prompt_tokens // 3
             )
 
         return tokens_to_subtract

@@ -69,12 +69,15 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             self._logger.debug("Message from unfocused chat: %s", message.chat.id)
 
             if not message.contains_aerith_mention:
+                if not can_use:
+                    chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
+                    await self._db_session.commit()
                 return
 
             if not can_use:
                 self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
 
-                chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
+                chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
 
                 if (
                     time.time() - chat_state.last_ignored_answer
@@ -120,7 +123,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
 
             chat_state.is_focused = False
-            chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
+            chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
 
             await self._db_session.commit()
 

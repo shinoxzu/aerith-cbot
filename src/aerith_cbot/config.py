@@ -66,6 +66,7 @@ class AdditionalInstructions(BaseModel):
     limit_in_group: str
     limit_in_private: str
     chat_unfocused_by_request: str
+    you_call_too_many_tools: str
 
 
 class LLMConfig(BaseModel):

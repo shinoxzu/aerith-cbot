@@ -41,7 +41,7 @@ class MessageQueue:
         for chat_id, entry in self._local_entries.items():
             if entry.messages and (
                 current_time - entry.last_updated
-                > random.randint(0, MessageQueue.TIME_LIMIT_UPPER_BOUND)
+                > random.randint(2, MessageQueue.TIME_LIMIT_UPPER_BOUND)
                 or len(entry.messages) > MessageQueue.COUNT_LIMIT
             ):
                 ready_entries.append(copy.deepcopy(entry))
