@@ -217,9 +217,9 @@ class DefaultChatProcessor(ChatProcessor):
             tool_response = tool_result.response
 
         except Exception as e:
-            self._logger.error("Cannot execute tool; response content will be empty", exc_info=e)
+            self._logger.error("Cannot execute tool", exc_info=e)
 
-            tool_response = ""
+            tool_response = "Произошла ошибка. Не вышло выполнить указанное действие"
             tool_stop = False
 
         return (tool_response, tool_stop)

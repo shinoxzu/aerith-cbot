@@ -67,6 +67,7 @@ class AdditionalInstructions(BaseModel):
     limit_in_private: str
     chat_unfocused_by_request: str
     you_call_too_many_tools: str
+    aerith_chat_join: str
 
 
 class LLMConfig(BaseModel):

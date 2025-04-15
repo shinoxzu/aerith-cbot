@@ -16,6 +16,7 @@ class ModelInputMessage(BaseModel):
     reply_message: typing.Optional["ModelInputMessage"] = None
     text: str | None = None
     date: str
+    meta: str | None
 
 
 class ModelResponse(BaseModel):

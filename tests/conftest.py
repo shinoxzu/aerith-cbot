@@ -16,6 +16,8 @@ def default_message_to_process() -> InputMessage:
         text="привет",
         date="1 января, 2025",
         contains_aerith_mention=False,
+        is_aerith_joined=False,
+        meta=None,
     )
 
 
@@ -42,6 +44,7 @@ def default_llm_config() -> LLMConfig:
             limit_in_private="",
             chat_unfocused_by_request="",
             you_call_too_many_tools="",
+            aerith_chat_join="",
         ),
     )
 

@@ -73,7 +73,46 @@ async def tg_msg_to_input_message(
         text=text,
         date=str(msg.date),
         contains_aerith_mention=await _is_aerith_mentioned(msg, bot),
+        is_aerith_joined=_is_aerith_joined(msg, bot),
+        meta=_parse_message_meta(msg),
     )
+
+
+def _parse_message_meta(msg: Message) -> str | None:
+    meta = None
+
+    if msg.audio is not None:
+        if msg.audio.title and msg.audio.performer:
+            meta = f"В сообщении есть аудио: {msg.audio.title} — {msg.audio.performer}"
+        else:
+            meta = "В сообщении есть аудио"
+
+    if msg.video is not None:
+        meta = "В сообщении есть видео"
+
+    if msg.poll is not None:
+        options = "/".join([option.text for option in msg.poll.options])
+        meta = f"В сообщении есть опрос: {msg.poll.question} (варианты: {options})"
+
+    if msg.pinned_message is not None:
+        meta = "Сообщение было закреплено"
+
+    if msg.new_chat_title is not None:
+        meta = f"Название чата было обновлено: {msg.new_chat_title}"
+
+    if msg.new_chat_photo is not None:
+        meta = "Фото чата было обновлено"
+
+    if msg.delete_chat_photo is not None:
+        meta = "Фото чата было удалено"
+
+    if msg.new_chat_members:
+        meta = "Некоторые участники присоединились к чату"
+
+    if msg.left_chat_member:
+        meta = "Некоторые участники покинули чат"
+
+    return meta
 
 
 async def _is_aerith_mentioned(msg: Message, bot: Bot) -> bool:
@@ -95,6 +134,14 @@ async def _is_aerith_mentioned(msg: Message, bot: Bot) -> bool:
                 break
 
     return is_triggered
+
+
+def _is_aerith_joined(msg: Message, bot: Bot) -> bool:
+    if msg.new_chat_members:
+        for chat_member in msg.new_chat_members:
+            if chat_member.id == bot.id:
+                return True
+    return False
 
 
 async def fetch_file_text(url: str, client_seesion: aiohttp.ClientSession) -> str:
