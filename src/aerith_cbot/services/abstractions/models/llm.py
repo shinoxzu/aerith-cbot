@@ -21,6 +21,6 @@ class ModelInputMessage(BaseModel):
 
 
 class ModelResponse(BaseModel):
-    text: list[str]
+    text: typing.Optional[str]
     sticker: typing.Optional[str]
     reply_to_message_id: typing.Optional[int]

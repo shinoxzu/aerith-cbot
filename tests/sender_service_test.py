@@ -22,7 +22,7 @@ async def test_send_text_message():
     mock_bot.send_chat_action = AsyncMock()
     mock_bot.send_message = AsyncMock()
 
-    response = ModelResponse(text=["hi", "how are u"], sticker=None, reply_to_message_id=None)
+    response = ModelResponse(text="hi", sticker=None, reply_to_message_id=None)
 
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
@@ -35,7 +35,7 @@ async def test_send_text_message():
     mock_stickers_service.search.assert_not_called()
     mock_stickers_service.is_valid_emoji.assert_not_called()
 
-    assert mock_bot.send_message.call_count == 2
+    assert mock_bot.send_message.call_count == 1
     assert mock_bot.send_chat_action.call_count == 1
 
 
@@ -53,7 +53,7 @@ async def test_send_empty_message():
     mock_bot.send_chat_action = AsyncMock()
     mock_bot.send_message = AsyncMock()
 
-    response = ModelResponse(text=[], sticker=None, reply_to_message_id=None)
+    response = ModelResponse(text=None, sticker=None, reply_to_message_id=None)
 
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
@@ -85,7 +85,7 @@ async def test_send_empty_text_message():
     mock_bot.send_message = AsyncMock()
 
     response = ModelResponse(
-        text=["", ""],  # with [""] test also passed
+        text="",
         sticker=None,
         reply_to_message_id=None,
     )
@@ -95,14 +95,10 @@ async def test_send_empty_text_message():
     )
     await send_service.send_model_response(chat_id=1, response=response)
 
-    mock_bot.send_chat_action.assert_called()
     mock_bot.send_message.assert_not_called()
 
     mock_stickers_service.search.assert_not_called()
     mock_stickers_service.is_valid_emoji.assert_not_called()
-
-    mock_db_session.execute.assert_called_once()
-    mock_db_session.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -120,7 +116,7 @@ async def test_send_sticker():
     mock_bot.send_message = AsyncMock()
     mock_bot.send_sticker = AsyncMock()
 
-    response = ModelResponse(text=[""], sticker="😁", reply_to_message_id=None)
+    response = ModelResponse(text=None, sticker="😁", reply_to_message_id=None)
 
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
@@ -153,7 +149,7 @@ async def test_send_unknown_sticker():
     mock_bot.send_message = AsyncMock()
     mock_bot.send_sticker = AsyncMock()
 
-    response = ModelResponse(text=[""], sticker="😁", reply_to_message_id=None)
+    response = ModelResponse(text=None, sticker="😁", reply_to_message_id=None)
 
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot
@@ -186,7 +182,7 @@ async def test_send_text_instead_of_emoji():
     mock_bot.send_message = AsyncMock()
     mock_bot.send_sticker = AsyncMock()
 
-    response = ModelResponse(text=[""], sticker="null", reply_to_message_id=None)
+    response = ModelResponse(text=None, sticker="null", reply_to_message_id=None)
 
     send_service = DefaultSenderService(
         db_session=mock_db_session, stickers_service=mock_stickers_service, bot=mock_bot

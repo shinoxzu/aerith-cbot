@@ -7,11 +7,8 @@
       "type": "object",
       "properties": {
         "text": {
-          "type": "array",
-          "description": "Текстовый ответ. Чтобы писать как человек, можно разделить его на несколько сообщений. НЕ используй часто!",
-          "items": {
-            "type": "string"
-          }
+          "type": ["string", "null"],
+          "description": "Текстовый ответ"
         },
         "sticker": {
           "type": ["string", "null"],

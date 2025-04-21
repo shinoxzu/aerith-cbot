@@ -28,26 +28,18 @@ class DefaultSenderService(SenderService):
         self._logger = logging.getLogger(__name__)
 
     async def send_model_response(self, chat_id: int, response: ModelResponse) -> None:
-        reply_used = False
-
         if response.text or response.sticker:
             await self._bot.send_chat_action(chat_id=chat_id, action="typing")
 
-            for text in response.text:
-                # model sometime returns empty text string
-                formatted_text = telegram_format(text)
-                if not formatted_text:
-                    continue
-
-                await self._bot.send_message(
-                    chat_id,
-                    formatted_text,
-                    parse_mode=ParseMode.HTML,
-                    reply_to_message_id=response.reply_to_message_id if not reply_used else None,
-                )
-                reply_used = True
-
-                await asyncio.sleep(1)
+            if response.text:
+                formatted_text = telegram_format(response.text)
+                if formatted_text:
+                    await self._bot.send_message(
+                        chat_id,
+                        formatted_text,
+                        parse_mode=ParseMode.HTML,
+                        reply_to_message_id=response.reply_to_message_id,
+                    )
 
             if response.sticker is not None and self._stickers_service.is_valid_emoji(
                 response.sticker
@@ -61,11 +53,7 @@ class DefaultSenderService(SenderService):
                         sticker_file_id,
                     )
                     await self._bot.send_sticker(
-                        chat_id,
-                        sticker_file_id,
-                        reply_to_message_id=response.reply_to_message_id
-                        if not reply_used
-                        else None,
+                        chat_id, sticker_file_id, reply_to_message_id=response.reply_to_message_id
                     )
                 else:
                     self._logger.debug(
@@ -73,11 +61,7 @@ class DefaultSenderService(SenderService):
                         response.sticker,
                     )
                     await self._bot.send_message(
-                        chat_id,
-                        response.sticker,
-                        reply_to_message_id=response.reply_to_message_id
-                        if not reply_used
-                        else None,
+                        chat_id, response.sticker, reply_to_message_id=response.reply_to_message_id
                     )
 
             await self._db_session.execute(

@@ -80,6 +80,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
                 chat_state.is_focused = False
                 chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
+                chat_state.last_ignored_answer = int(time.time())
 
                 await self._db_session.commit()
 
@@ -109,6 +110,8 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                     )
                 else:
                     chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
+                    chat_state.last_ignored_answer = int(time.time())
+
                     await self._db_session.commit()
 
                     await self._send_ignoring_if_needed(chat_state)
