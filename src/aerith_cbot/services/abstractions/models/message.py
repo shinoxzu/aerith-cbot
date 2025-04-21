@@ -9,6 +9,7 @@ class InputChat(BaseModel):
 class InputUser(BaseModel):
     id: int
     name: str
+    is_aerith: bool
 
 
 class InputMessage(BaseModel):

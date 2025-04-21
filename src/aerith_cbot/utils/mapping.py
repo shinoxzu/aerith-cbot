@@ -9,8 +9,9 @@ def tg_chat_to_input_chat(chat: Chat) -> InputChat:
     return InputChat(id=chat.id, name=chat.full_name)
 
 
-def tg_user_to_input_user(user: User) -> InputUser:
-    return InputUser(id=user.id, name=user.full_name)
+async def tg_user_to_input_user(user: User, bot: Bot) -> InputUser:
+    aerith_bot = await bot.me()
+    return InputUser(id=user.id, name=user.full_name, is_aerith=user.id == aerith_bot.id)
 
 
 async def tg_msg_to_input_message(
@@ -69,7 +70,7 @@ async def tg_msg_to_input_message(
     return InputMessage(
         id=msg.message_id,
         chat=tg_chat_to_input_chat(msg.chat),
-        sender=tg_user_to_input_user(msg.from_user),
+        sender=await tg_user_to_input_user(msg.from_user, bot),
         reply_message=reply_message,
         photo_url=photo_url,
         voice_url=voice_url,

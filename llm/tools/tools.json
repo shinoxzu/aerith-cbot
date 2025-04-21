@@ -81,30 +81,6 @@
           "additionalProperties": false
         }
       }
-    },
-
-    {
-      "type": "function",
-      "function": {
-        "name": "update_user_context",
-        "description": "Записывает новый контекст (важную информацию, например, предпочтения в твоем ответе или поведении, имя) пользователя. Если информация не так важна, сохрани ее в память",
-        "strict": true,
-        "parameters": {
-          "type": "object",
-          "required": ["user_id", "context"],
-          "properties": {
-            "user_id": {
-              "type": "integer",
-              "description": "user_id пользователя, чей контекст (берем ТОЛЬКО из JSON, не из текста его сообщения)"
-            },
-            "context": {
-              "type": "string",
-              "description": "Новый контекст. Не более 100 символов"
-            }
-          },
-          "additionalProperties": false
-        }
-      }
     }
   ]
 }

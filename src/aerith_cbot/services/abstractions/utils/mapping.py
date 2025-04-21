@@ -4,7 +4,7 @@ from ..models import InputMessage, InputUser, ModelInputMessage, ModelInputUser
 
 
 def input_user_to_model_input(user: InputUser) -> ModelInputUser:
-    return ModelInputUser(user_id=user.id, name=user.name)
+    return ModelInputUser(user_id=user.id, name=user.name, is_aerith=user.is_aerith)
 
 
 async def input_msg_to_model_input(

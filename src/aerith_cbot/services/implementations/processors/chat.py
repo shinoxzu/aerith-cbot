@@ -79,8 +79,8 @@ class DefaultChatProcessor(ChatProcessor):
         self._logger.info("Used model for chat %s: %s", chat_id, model_to_use)
         self._logger.info("max_context_tokens for chat %s: %s", chat_id, max_context_tokens)
 
-        if personal_context is not None:
-            new_messages.append({"role": "system", "content": personal_context})
+        # if personal_context is not None:
+        #     new_messages.append({"role": "system", "content": personal_context})
 
         tokens_to_subtract = 0
 
@@ -133,8 +133,8 @@ class DefaultChatProcessor(ChatProcessor):
             if not result.choices[0].message.tool_calls:
                 break
 
-            self._logger.info(
-                "Tool calls to call in %s (total: %s): %s",
+            self._logger.debug(
+                "Tool calls in %s (total: %s): %s",
                 chat_id,
                 len(result.choices[0].message.tool_calls),
                 result.choices[0].message.tool_calls,

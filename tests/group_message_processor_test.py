@@ -123,14 +123,14 @@ async def test_skipping_unfocused(
         sender_service=mock_sender_service,
         voice_transcriber=mock_voice_transcriber,
     )
-    
+
     group_message_processor._is_chat_inactive = AsyncMock(return_value=False)
 
     await group_message_processor.process(
         InputMessage(
             id=1,
             chat=InputChat(id=1, name="чат друзей"),
-            sender=InputUser(id=1, name="Петя"),
+            sender=InputUser(id=1, name="Петя", is_aerith=False),
             reply_message=None,
             photo_url=None,
             voice_url=None,
@@ -176,14 +176,14 @@ async def test_focusing_unfocused(
         sender_service=mock_sender_service,
         voice_transcriber=mock_voice_transcriber,
     )
-    
+
     group_message_processor._is_chat_inactive = AsyncMock(return_value=False)
 
     await group_message_processor.process(
         InputMessage(
             id=1,
             chat=InputChat(id=1, name="чат друзей"),
-            sender=InputUser(id=1, name="Петя"),
+            sender=InputUser(id=1, name="Петя", is_aerith=False),
             reply_message=None,
             photo_url=None,
             voice_url=None,
@@ -234,7 +234,7 @@ async def test_adding_message_to_queue(
         InputMessage(
             id=1,
             chat=InputChat(id=1, name="чат друзей"),
-            sender=InputUser(id=1, name="Петя"),
+            sender=InputUser(id=1, name="Петя", is_aerith=False),
             reply_message=None,
             photo_url=None,
             voice_url=None,

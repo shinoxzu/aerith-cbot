@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class ModelInputUser(BaseModel):
     user_id: int
     name: str
+    is_aerith: bool | None = None
 
 
 class ModelInputMessage(BaseModel):

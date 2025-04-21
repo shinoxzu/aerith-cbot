@@ -9,7 +9,7 @@ def default_message_to_process() -> InputMessage:
     return InputMessage(
         id=1,
         chat=InputChat(id=1, name="чат друзей"),
-        sender=InputUser(id=1, name="Петя"),
+        sender=InputUser(id=1, name="Петя", is_aerith=False),
         reply_message=None,
         photo_url=None,
         voice_url=None,
