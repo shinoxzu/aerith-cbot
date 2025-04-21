@@ -8,12 +8,11 @@ class ToolCommand(ABC):
 
 
 class ToolExecutionResult:
-    def __init__(self, response: str, stop: bool) -> None:
+    def __init__(self, response: str) -> None:
         self.response = response
-        self.stop = stop
 
     def __str__(self) -> str:
-        return f"ToolExecutionResult(response={self.response}, stop={self.stop})"
+        return f"ToolExecutionResult(response={self.response}"
 
 
 class ToolCommandDispatcher(ABC):

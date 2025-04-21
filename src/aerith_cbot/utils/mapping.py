@@ -63,6 +63,9 @@ async def tg_msg_to_input_message(
     # * caption
     # * sticker emoji
 
+    is_aerith_mentioned = await _is_aerith_mentioned(msg, bot)
+    is_aerith_replied = await _is_aerith_replied(msg, bot)
+
     return InputMessage(
         id=msg.message_id,
         chat=tg_chat_to_input_chat(msg.chat),
@@ -72,7 +75,7 @@ async def tg_msg_to_input_message(
         voice_url=voice_url,
         text=text,
         date=str(msg.date),
-        contains_aerith_mention=await _is_aerith_mentioned(msg, bot),
+        is_aerith_called=is_aerith_mentioned or is_aerith_replied,
         is_aerith_joined=_is_aerith_joined(msg, bot),
         meta=_parse_message_meta(msg),
     )
@@ -89,6 +92,9 @@ def _parse_message_meta(msg: Message) -> str | None:
 
     if msg.video is not None:
         meta = "В сообщении есть видео"
+
+    if msg.document is not None:
+        meta = f"В сообщении есть документ: {msg.document.file_name}"
 
     if msg.poll is not None:
         options = "/".join([option.text for option in msg.poll.options])
@@ -134,6 +140,15 @@ async def _is_aerith_mentioned(msg: Message, bot: Bot) -> bool:
                 break
 
     return is_triggered
+
+
+async def _is_aerith_replied(msg: Message, bot: Bot) -> bool:
+    aerith_bot = await bot.me()
+    return (
+        msg.reply_to_message is not None
+        and msg.reply_to_message.from_user is not None
+        and msg.reply_to_message.from_user.id == aerith_bot.id
+    )
 
 
 def _is_aerith_joined(msg: Message, bot: Bot) -> bool:

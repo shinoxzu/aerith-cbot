@@ -16,6 +16,7 @@ class ChatState(Base):
     def __repr__(self) -> str:
         return f"ChatState(\
         chat_id={self.chat_id}, \
+        is_focused={self.is_focused}, \
         ignoring_streak={self.ignoring_streak}, \
         sleeping_till={self.sleeping_till}, \
         last_ignored_answer={self.last_ignored_answer})"

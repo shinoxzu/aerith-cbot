@@ -3,6 +3,26 @@
     {
       "type": "function",
       "function": {
+        "name": "think",
+        "description": "Позволяет подумать",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "required": ["thoughts"],
+          "properties": {
+            "thoughts": {
+              "type": "string",
+              "description": "Твои мысли"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+
+    {
+      "type": "function",
+      "function": {
         "name": "get_chat_info",
         "description": "Получает информацию о чате: название, описание и закрепленное сообщение",
         "strict": true,
@@ -14,7 +34,7 @@
         }
       }
     },
-    
+
     {
       "type": "function",
       "function": {
@@ -63,31 +83,6 @@
       }
     },
 
-    {
-      "type": "function",
-      "function": {
-        "name": "fetch_info",
-        "description": "Получает информацию о себе или актуальных новостях. Например, если хочешь узнать, какого цвета у тебя волосы. Не вызывай часто",
-        "strict": true,
-        "parameters": {
-          "type": "object",
-          "required": ["topic", "query"],
-          "properties": {
-            "topic": {
-              "type": "string",
-              "description": "Тема информации",
-              "enum": ["aerith", "news"]
-            },
-            "query": {
-              "type": "string",
-              "description": "Что надо искать"
-            }
-          },
-          "additionalProperties": false
-        }
-      }
-    },
-    
     {
       "type": "function",
       "function": {

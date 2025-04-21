@@ -39,8 +39,6 @@ class DefaultSenderService(SenderService):
                 if not formatted_text:
                     continue
 
-                await asyncio.sleep(random.randint(0, 1))
-
                 await self._bot.send_message(
                     chat_id,
                     formatted_text,

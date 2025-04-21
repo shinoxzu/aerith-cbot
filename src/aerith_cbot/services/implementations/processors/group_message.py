@@ -41,30 +41,29 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
     async def process(self, message: InputMessage) -> None:
         chat_state = await self._create_of_fetch_chat_state(message.chat)
 
-        # if chat is inactive for now cause of limits
+        # if chat is inactive for now cause of limits, we ignore it
         if chat_state.sleeping_till > int(time.time()):
-            if message.contains_aerith_mention:
-                if (
-                    time.time() - chat_state.last_ignored_answer
-                    > DefaultGroupMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
-                ):
-                    await self._sender_service.send_ignoring(message.chat.id)
-
-                    chat_state.last_ignored_answer = int(time.time())
-                    await self._db_session.commit()
-
             self._logger.debug(
                 "Ignoring message cause sleeping (to %s) from chat: %s",
                 chat_state.sleeping_till,
                 message.chat,
             )
 
+            if message.is_aerith_called:
+                await self._send_ignoring_if_needed(chat_state)
+
             return
 
+        new_messages: list[dict] = []
+
+        # we must check activity first because checking group limit will mark a new activity in the chat
+        chat_was_active_too_long_ago = await self._is_chat_inactive(message.chat.id)
+        can_use = await self._limits_service.check_group_limit(message.sender.id, message.chat.id)
+
         if chat_state.is_focused:
-            # if chat is focused and inactive, we unfocus it
-            is_chat_inactive = await self._is_chat_inactive(message.chat.id)
-            if is_chat_inactive:
+            # if chat is focused and inactive, we unfocus it and ignore the message,
+            # if there is no aerith mentions on replies
+            if not message.is_aerith_called and chat_was_active_too_long_ago:
                 self._logger.info(
                     "Chat %s was active too long ago so we unfocus it", message.chat.id
                 )
@@ -74,72 +73,47 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
 
                 return
 
-        new_messages: list[dict] = []
-
-        can_use = await self._limits_service.check_group_limit(message.sender.id, message.chat.id)
-
-        if not chat_state.is_focused:
-            self._logger.debug("Message from unfocused chat: %s", message.chat.id)
-
-            if not message.contains_aerith_mention:
-                if not can_use:
-                    chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
-                    await self._db_session.commit()
-                return
-
+            # if there are no tokens available, we say goodbye to the user
+            # also we make chat inactive by setting sleeping_till property
             if not can_use:
                 self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
 
+                chat_state.is_focused = False
                 chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
-
-                if (
-                    time.time() - chat_state.last_ignored_answer
-                    > DefaultGroupMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
-                ):
-                    await self._sender_service.send_ignoring(message.chat.id)
-
-                    chat_state.last_ignored_answer = int(time.time())
-
-                await self._db_session.commit()
-                return
-
-            else:
-                self._logger.info("Chat %s is focused now; processing message", message.chat.id)
-
-                chat_state.ignoring_streak = 0
-                chat_state.is_focused = True
 
                 await self._db_session.commit()
 
                 new_messages.append(
                     {
                         "role": "system",
-                        "content": self._llm_config.additional_instructions.aerith_has_mentioned,
+                        "content": self._llm_config.additional_instructions.limit_in_group,
                     }
                 )
+        else:
+            self._logger.debug("Message from unfocused chat: %s", message.chat.id)
+
+            if message.is_aerith_called:
+                if can_use:
+                    self._logger.info("Chat %s is focused now; processing message", message.chat.id)
+
+                    chat_state.ignoring_streak = 0
+                    chat_state.is_focused = True
+
+                    await self._db_session.commit()
+                else:
+                    chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
+                    await self._db_session.commit()
+
+                    await self._send_ignoring_if_needed(chat_state)
+                    return
+            else:
+                return
 
         if message.is_aerith_joined:
             new_messages.append(
                 {
                     "role": "system",
                     "content": self._llm_config.additional_instructions.aerith_chat_join,
-                }
-            )
-
-        # if there are no tokens available, we say goodbye to the user
-        # also we make chat inactive by setting sleeping_till property
-        if not can_use:
-            self._logger.info("Chat %s has used its limit; byeing", message.chat.id)
-
-            chat_state.is_focused = False
-            chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
-
-            await self._db_session.commit()
-
-            new_messages.append(
-                {
-                    "role": "system",
-                    "content": self._llm_config.additional_instructions.limit_in_group,
                 }
             )
 
@@ -187,7 +161,20 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
             .limit(1)
         )
         result = await self._db_session.scalar(stmt)
+
+        # if result is None, then there are no messages in the chat yet, so this is a new chat
+        # we don't want to ignore a new chat
         return (
-            result is None
-            or int(time.time()) - result > DefaultGroupMessageProcessor.MAX_LAST_CONTACT_TIME
+            result is not None
+            and int(time.time()) - result > DefaultGroupMessageProcessor.MAX_LAST_CONTACT_TIME
         )
+
+    async def _send_ignoring_if_needed(self, chat_state: ChatState) -> None:
+        if (
+            time.time() - chat_state.last_ignored_answer
+            > DefaultGroupMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
+        ):
+            await self._sender_service.send_ignoring(chat_state.chat_id)
+
+            chat_state.last_ignored_answer = int(time.time())
+            await self._db_session.commit()

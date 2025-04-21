@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from openai import APIError, AsyncOpenAI, BadRequestError, RateLimitError
-from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
+from openai.types.chat import ChatCompletion
 
 from aerith_cbot.config import LimitsConfig, LLMConfig, OpenAIConfig
 from aerith_cbot.services.abstractions import (
@@ -84,14 +84,12 @@ class DefaultChatProcessor(ChatProcessor):
 
         tokens_to_subtract = 0
 
-        tool_stop = False
         current_iterations = 0
         current_tool_calls = 0
 
         while (
             current_iterations < DefaultChatProcessor.MAX_LLM_CALL_ITERATIONS
             and current_tool_calls < DefaultChatProcessor.MAX_TOOL_CALL_ITERATIONS
-            and not tool_stop
         ):
             result = await self._get_llm_response(
                 chat_id,
@@ -144,13 +142,15 @@ class DefaultChatProcessor(ChatProcessor):
 
             # call all functions in one response
             for tool_call in result.choices[0].message.tool_calls:
-                tool_response, tool_stop = await self._process_llm_tool_call(chat_id, tool_call)
+                tool_response = await self._tool_command_dispatcher.execute_tool(
+                    tool_call.function.name, tool_call.function.arguments, chat_id
+                )
 
                 new_messages.append(
                     {
                         "role": "tool",
                         "tool_call_id": tool_call.id,
-                        "content": tool_response,
+                        "content": tool_response.response,
                     },
                 )
 
@@ -185,44 +185,6 @@ class DefaultChatProcessor(ChatProcessor):
             await self._limits_service.subtract_private_tokens(chat_id, tokens_to_subtract)
 
         await self._message_service.add_messages(chat_id, new_messages)
-
-    async def _process_llm_tool_call(
-        self, chat_id, tool_call: ChatCompletionMessageToolCall
-    ) -> tuple[str, bool]:
-        try:
-            self._logger.info(
-                "Calling function %s in chat %s with params %s (id: %s)",
-                tool_call.function.name,
-                chat_id,
-                tool_call.function.arguments,
-                tool_call.id,
-            )
-
-            tool_result = await self._tool_command_dispatcher.execute_tool(
-                tool_call.function.name, tool_call.function.arguments, chat_id
-            )
-
-            self._logger.info(
-                "Result for function %s in chat %s is: %s",
-                tool_call.id,
-                chat_id,
-                tool_result,
-            )
-
-            # if tool calling loop should be stopped, this will be eq True
-            # for example, it will happen when an ignore or listen tool will be called
-            # the reason is model sometimes looping in these tools call
-            # (trying to ignore messages too many times for example)
-            tool_stop = tool_result.stop
-            tool_response = tool_result.response
-
-        except Exception as e:
-            self._logger.error("Cannot execute tool", exc_info=e)
-
-            tool_response = "Произошла ошибка. Не вышло выполнить указанное действие"
-            tool_stop = False
-
-        return (tool_response, tool_stop)
 
     async def _get_llm_response(
         self,

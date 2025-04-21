@@ -15,7 +15,7 @@ def default_message_to_process() -> InputMessage:
         voice_url=None,
         text="привет",
         date="1 января, 2025",
-        contains_aerith_mention=False,
+        is_aerith_called=False,
         is_aerith_joined=False,
         meta=None,
     )

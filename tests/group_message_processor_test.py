@@ -123,6 +123,8 @@ async def test_skipping_unfocused(
         sender_service=mock_sender_service,
         voice_transcriber=mock_voice_transcriber,
     )
+    
+    group_message_processor._is_chat_inactive = AsyncMock(return_value=False)
 
     await group_message_processor.process(
         InputMessage(
@@ -134,7 +136,7 @@ async def test_skipping_unfocused(
             voice_url=None,
             text="привет",
             date="1 января, 2025",
-            contains_aerith_mention=False,
+            is_aerith_called=False,
             is_aerith_joined=False,
             meta=None,
         )
@@ -174,6 +176,8 @@ async def test_focusing_unfocused(
         sender_service=mock_sender_service,
         voice_transcriber=mock_voice_transcriber,
     )
+    
+    group_message_processor._is_chat_inactive = AsyncMock(return_value=False)
 
     await group_message_processor.process(
         InputMessage(
@@ -185,7 +189,7 @@ async def test_focusing_unfocused(
             voice_url=None,
             text="привет",
             date="1 января, 2025",
-            contains_aerith_mention=True,
+            is_aerith_called=True,
             is_aerith_joined=False,
             meta=None,
         )
@@ -236,7 +240,7 @@ async def test_adding_message_to_queue(
             voice_url=None,
             text="привет",
             date="1 января, 2025",
-            contains_aerith_mention=False,
+            is_aerith_called=False,
             is_aerith_joined=False,
             meta=None,
         )

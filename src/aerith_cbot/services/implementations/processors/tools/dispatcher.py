@@ -60,9 +60,19 @@ class DefaultToolCommandDispatcher(ToolCommandDispatcher):
         self._logger = logging.getLogger(__name__)
 
     async def execute_tool(self, name: str, arguments: str, chat_id: int) -> ToolExecutionResult:
-        self._logger.debug("Running tool %s(%s) for chat %s", name, arguments, chat_id)
+        self._logger.info(
+            "Calling tool %s in chat %s with params %s",
+            name,
+            chat_id,
+            arguments,
+        )
 
-        result = await self._tools[name].execute(arguments, chat_id)
-        stop = name in ("ignore_message", "wait_for_user_end", "unfocus_chat")
+        try:
+            result = await self._tools[name].execute(arguments, chat_id)
+        except Exception as e:
+            self._logger.error("Cannot execute tool", exc_info=e)
+            result = "Произошла ошибка. Не вышло выполнить указанное действие"
 
-        return ToolExecutionResult(result, stop)
+        self._logger.info("Result for tool %s in chat %s is: %s", name, chat_id, result)
+
+        return ToolExecutionResult(result)

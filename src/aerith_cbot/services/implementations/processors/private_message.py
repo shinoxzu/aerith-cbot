@@ -47,15 +47,7 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
                 message.chat,
             )
 
-            if (
-                time.time() - chat_state.last_ignored_answer
-                > DefaultPrivateMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
-            ):
-                await self._sender_service.send_ignoring(message.chat.id)
-
-                chat_state.last_ignored_answer = int(time.time())
-                await self._db_session.commit()
-
+            await self._send_ignoring_if_needed(chat_state)
             return
 
         can_use = await self._limits_service.check_private_limit(message.sender.id)
@@ -114,3 +106,13 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
             await self._db_session.commit()
 
         return chat_state
+
+    async def _send_ignoring_if_needed(self, chat_state: ChatState) -> None:
+        if (
+            time.time() - chat_state.last_ignored_answer
+            > DefaultPrivateMessageProcessor.IGNORED_MESSAGE_MIN_INTERVAL
+        ):
+            await self._sender_service.send_ignoring(chat_state.chat_id)
+
+            chat_state.last_ignored_answer = int(time.time())
+            await self._db_session.commit()

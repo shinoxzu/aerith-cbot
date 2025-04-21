@@ -20,6 +20,6 @@ class InputMessage(BaseModel):
     voice_url: str | None
     text: str | None
     date: str
-    contains_aerith_mention: bool
+    is_aerith_called: bool
     is_aerith_joined: bool
     meta: str | None

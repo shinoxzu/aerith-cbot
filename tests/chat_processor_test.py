@@ -188,64 +188,6 @@ async def test_processing_with_refusal(mock_dependencies):
 
 
 @pytest.mark.asyncio
-async def test_tool_stops_processing(mock_dependencies):
-    deps = mock_dependencies
-
-    mock_function = MagicMock(spec=Function)
-    mock_function.name = "ignore_message"
-    mock_function.arguments = "{}"
-
-    mock_tool_call = MagicMock(spec=ChatCompletionMessageToolCall)
-    mock_tool_call.id = "call_123"
-    mock_tool_call.type = "function"
-    mock_tool_call.function = mock_function
-
-    mock_message = MagicMock(spec=ChatCompletionMessage)
-    mock_message.content = None
-    mock_message.refusal = None
-    mock_message.tool_calls = [mock_tool_call]
-    mock_message.model_dump.return_value = {
-        "role": "assistant",
-        "content": None,
-        "tool_calls": [
-            {
-                "id": "call_123",
-                "type": "function",
-                "function": {"name": "ignore_message", "arguments": "{}"},
-            }
-        ],
-    }
-
-    mock_completion = MagicMock(spec=ChatCompletion)
-    mock_completion.choices = [MagicMock()]
-    mock_completion.choices[0].message = mock_message
-    mock_completion.usage = MagicMock(prompt_tokens=100, total_tokens=200)
-
-    deps["openai_client"].chat.completions.create.return_value = mock_completion
-    deps["tool_dispatcher"].execute_tool.return_value = ToolExecutionResult(
-        response="Ignoring message",
-        stop=True,
-    )
-
-    processor = DefaultChatProcessor(
-        deps["openai_client"],
-        deps["llm_config"],
-        deps["openai_config"],
-        deps["tool_dispatcher"],
-        deps["message_service"],
-        deps["limits_config"],
-        deps["context_provider"],
-        deps["limits_serivce"],
-        deps["model_response_processor"],
-        deps["support_service"],
-    )
-
-    await processor.process(chat_id=123, chat_type=ChatType.private)
-
-    assert deps["openai_client"].chat.completions.create.call_count == 1
-
-
-@pytest.mark.asyncio
 async def test_validation_error_handling(mock_dependencies):
     deps = mock_dependencies
 
@@ -412,7 +354,6 @@ async def test_max_iterations_limit(mock_dependencies):
     deps["openai_client"].chat.completions.create.return_value = mock_completion
     deps["tool_dispatcher"].execute_tool.return_value = ToolExecutionResult(
         response="Tool executed",
-        stop=False,
     )
 
     original_max_iterations = DefaultChatProcessor.MAX_LLM_CALL_ITERATIONS
@@ -439,70 +380,6 @@ async def test_max_iterations_limit(mock_dependencies):
         assert deps["tool_dispatcher"].execute_tool.call_count == 3
     finally:
         DefaultChatProcessor.MAX_LLM_CALL_ITERATIONS = original_max_iterations
-
-
-@pytest.mark.asyncio
-async def test_exception_in_tool_execution(mock_dependencies):
-    deps = mock_dependencies
-
-    mock_function = MagicMock(spec=Function)
-    mock_function.name = "test_tool"
-    mock_function.arguments = "{}"
-
-    mock_tool_call = MagicMock(spec=ChatCompletionMessageToolCall)
-    mock_tool_call.id = "call_123"
-    mock_tool_call.type = "function"
-    mock_tool_call.function = mock_function
-
-    mock_message = MagicMock(spec=ChatCompletionMessage)
-    mock_message.content = None
-    mock_message.refusal = None
-    mock_message.tool_calls = [mock_tool_call]
-    mock_message.model_dump.return_value = {
-        "role": "assistant",
-        "content": None,
-        "tool_calls": [
-            {
-                "id": "call_123",
-                "type": "function",
-                "function": {"name": "test_tool", "arguments": "{}"},
-            }
-        ],
-    }
-
-    mock_completion = MagicMock(spec=ChatCompletion)
-    mock_completion.choices = [MagicMock()]
-    mock_completion.choices[0].message = mock_message
-    mock_completion.usage = MagicMock(prompt_tokens=100, total_tokens=200)
-
-    deps["openai_client"].chat.completions.create.return_value = mock_completion
-
-    deps["tool_dispatcher"].execute_tool.side_effect = Exception("Tool execution failed")
-
-    processor = DefaultChatProcessor(
-        deps["openai_client"],
-        deps["llm_config"],
-        deps["openai_config"],
-        deps["tool_dispatcher"],
-        deps["message_service"],
-        deps["limits_config"],
-        deps["context_provider"],
-        deps["limits_serivce"],
-        deps["model_response_processor"],
-        deps["support_service"],
-    )
-
-    await processor.process(chat_id=123, chat_type=ChatType.private)
-
-    deps["message_service"].add_messages.assert_called_once()
-
-    add_messages_call_args = deps["message_service"].add_messages.call_args
-    messages = add_messages_call_args[0][1]
-
-    tool_response_message = messages[2]
-    assert tool_response_message["role"] == "tool"
-    assert tool_response_message["tool_call_id"] == "call_123"
-    assert tool_response_message["content"] == ""
 
 
 @pytest.mark.asyncio
