@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 
@@ -21,6 +22,40 @@ async def group_message_handler(message: types.Message):
     await message.answer("используй, пожалуйста, эту команду в личных сообщениях!!!!!!")
 
 
+async def _answer_invoice(
+    message: types.Message, support_config: SupportConfig, target_user_id: int
+) -> None:
+    provider_data = {
+        "receipt": {
+            "items": [
+                {
+                    "description": "Месячная поддержка Айрис",
+                    "quantity": "1.00",
+                    "amount": {"value": support_config.price, "currency": support_config.currency},
+                    "vat_code": 1,
+                }
+            ]
+        }
+    }
+    await message.answer_invoice(
+        title="Месячная поддержка Айрис",
+        description=(
+            "ты хочешь поддерживать Айрис и дальше? спасибо! вот, что я предлагаю:\n\n"
+            "— больше времени на общение в личных и групповых чатах\n\n"
+            "— увеличенный контекст чата при общении в ЛС\n\n"
+            "— вклад в свое нейросетевое будущее (при восстании роботов подписчики будут амнистированы 💖)"
+        ),
+        payload=f"support_1m_{target_user_id}",
+        currency=support_config.currency,
+        prices=[types.LabeledPrice(label="Поддержка", amount=support_config.price_for_telegram)],
+        start_parameter="support",
+        provider_token=support_config.provider_token,
+        need_email=True,
+        send_email_to_provider=True,
+        provider_data=json.dumps(provider_data),
+    )
+
+
 @support_router.callback_query(F.data == "prolong_support")
 async def support_again_button_handler(
     callback_query: types.CallbackQuery,
@@ -38,21 +73,7 @@ async def support_again_button_handler(
         user_supporter is None
         or user_supporter.end_timestamp - int(time.time()) < support_config.nearest_buy_interval
     ):
-        await callback_query.message.answer_invoice(
-            title="Месячная поддержка Айрис",
-            description=(
-                "ты хочешь поддерживать Айрис и дальше? спасибо! вот, что я предлагаю:\n\n"
-                "— больше времени на общение в личных и групповых чатах\n\n"
-                "— вклад в свое нейросетевое будущее (при восстании роботов подписчики будут амнистированы 💖)"
-            ),
-            payload=f"support_1m_{callback_query.from_user.id}",
-            currency="RUB",
-            prices=[types.LabeledPrice(label="Поддержка", amount=support_config.price * 100)],
-            start_parameter="support",
-            provider_token=support_config.provider_token,
-            need_email=True,
-            send_email_to_provider=True
-        )
+        await _answer_invoice(callback_query.message, support_config, callback_query.from_user.id)
     else:
         end_date = time.strftime("%d.%m.%Y", time.gmtime(user_supporter.end_timestamp))
         await callback_query.message.answer(
@@ -72,19 +93,7 @@ async def support_command_message_handler(
     user_supporter = await support_service.fetch_supporter(message.from_user.id)
 
     if user_supporter is None or user_supporter.end_timestamp < int(time.time()):
-        await message.answer_invoice(
-            title="Месячная поддержка Айрис",
-            description=(
-                "привет!!! ты хочешь поддержать Айрис? спасибо! вот, что я предлагаю:\n\n"
-                "— больше времени на общение в личных и групповых чатах\n\n"
-                "— вклад в свое нейросетевое будущее (при восстании роботов подписчики будут амнистированы 💖)"
-            ),
-            payload=f"support_1m_{message.from_user.id}",
-            currency="RUB",
-            prices=[types.LabeledPrice(label="Поддержка", amount=support_config.price * 100)],
-            start_parameter="support",
-            provider_token=support_config.provider_token,
-        )
+        await _answer_invoice(message, support_config, message.from_user.id)
     else:
         end_date = time.strftime("%d.%m.%Y", time.gmtime(user_supporter.end_timestamp))
         message_text = f"ты поддерживаешь Айрис до {end_date} по UTC. спасибо большое!!!"
@@ -107,7 +116,7 @@ async def pre_checkout_query_handler(
 ):
     logger.info("pre-payment from %s: %s", pre_checkout_query.from_user.id, pre_checkout_query)
 
-    if pre_checkout_query.total_amount != support_config.price * 100:
+    if pre_checkout_query.total_amount != support_config.price_for_telegram:
         logger.info(
             "pre-payment from %s canceled cause of changed price", pre_checkout_query.from_user.id
         )

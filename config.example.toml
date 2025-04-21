@@ -29,7 +29,9 @@ private_max_context_tokens=30_000
 private_support_max_context_tokens=70_000
 
 [support]
-price=399
+price=299
+price_for_telegram=29900
+currency="RUB"
 duration=2_678_400
 nearest_buy_interval=172_800
 provider_token="TOKEN"

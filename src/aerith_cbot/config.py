@@ -44,6 +44,8 @@ class LimitsConfig(BaseModel):
 
 class SupportConfig(BaseModel):
     price: int
+    price_for_telegram: int
+    currency: str
     duration: int
     nearest_buy_interval: int
     provider_token: str
