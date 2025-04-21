@@ -45,6 +45,7 @@ def default_llm_config() -> LLMConfig:
             chat_unfocused_by_request="",
             you_call_too_many_tools="",
             aerith_chat_join="",
+            limit_in_private_end="",
         ),
     )
 

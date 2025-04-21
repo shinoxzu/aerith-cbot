@@ -49,6 +49,18 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
 
             await self._send_ignoring_if_needed(chat_state)
             return
+        
+        new_messages: list[dict] = []
+        if not chat_state.is_focused:
+            chat_state.is_focused = True
+            await self._db_session.commit()
+
+            new_messages.append(
+                {
+                    "role": "system",
+                    "content": self._llm_config.additional_instructions.limit_in_private_end,
+                }
+            )
 
         can_use = await self._limits_service.check_private_limit(message.sender.id)
 
@@ -59,17 +71,16 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
 
             chat_state.sleeping_till = int(time.time()) + self._limits_config.private_cooldown
             chat_state.last_ignored_answer = int(time.time())
+            chat_state.is_focused = False
 
             await self._db_session.commit()
 
-            new_messages: list[dict] = [
+            new_messages.append(
                 {
                     "role": "system",
                     "content": self._llm_config.additional_instructions.limit_in_private,
                 }
-            ]
-        else:
-            new_messages: list[dict] = []
+            )
 
         content = []
         if message.photo_url is not None:
@@ -102,7 +113,7 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
         if chat_state is None:
             self._logger.debug("Adding new chat_state for chat: %s", chat)
 
-            chat_state = ChatState(chat_id=chat.id, sleeping_till=0)
+            chat_state = ChatState(chat_id=chat.id, sleeping_till=0, is_focused=True)
             self._db_session.add(chat_state)
             await self._db_session.commit()
 

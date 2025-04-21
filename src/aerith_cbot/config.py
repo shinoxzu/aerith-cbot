@@ -68,6 +68,7 @@ class AdditionalInstructions(BaseModel):
     aerith_has_mentioned: str
     limit_in_group: str
     limit_in_private: str
+    limit_in_private_end: str
     chat_unfocused_by_request: str
     you_call_too_many_tools: str
     aerith_chat_join: str
