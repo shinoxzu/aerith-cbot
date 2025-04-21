@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class BotConfig(BaseModel):
     token: str
     admin_ids: list[int]
+    help_article: str
 
 
 class DbConfig(BaseModel):

@@ -1,6 +1,7 @@
 [bot]
 token = "TOKEN"
 admin_ids = [ 123456789 ]
+help_article = "https://teletype.in/@aerith_cbot/desc"
 
 [db]
 connection_string = "postgresql+asyncpg://root:root@db/aerith"

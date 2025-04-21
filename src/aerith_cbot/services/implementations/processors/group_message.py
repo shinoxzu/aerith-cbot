@@ -100,7 +100,7 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                     chat_state.is_focused = True
 
                     await self._db_session.commit()
-                        
+
                     new_messages.append(
                         {
                             "role": "system",

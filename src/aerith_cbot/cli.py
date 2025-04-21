@@ -6,6 +6,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.methods import DeleteWebhook
 from dishka.integrations.aiogram import setup_dishka
 
+from .commands import setup_commands
 from .config import load_config
 from .container import init_dishka_container
 from .handlers import handlers_router
@@ -23,6 +24,8 @@ async def main():
 
     bot = Bot(token=config.bot.token)
     dp = Dispatcher()
+
+    await setup_commands(bot)
 
     container = await init_dishka_container(config, bot)
     setup_dishka(container=container, router=dp, auto_inject=True)

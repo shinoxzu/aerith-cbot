@@ -4,6 +4,7 @@ from aiogram import Router, types
 from aiogram.filters import Command
 from dishka import FromDishka
 
+from aerith_cbot.config import BotConfig
 from aerith_cbot.filters import ChatTypeFilter
 from aerith_cbot.services.abstractions import MessageService
 
@@ -16,9 +17,12 @@ async def error_handler(event: types.ErrorEvent):
     logger.critical("Critical error caused by %s", event.exception, exc_info=True)
 
 
-@utils_router.message(Command("help"))
-async def help_command_handler(message: types.Message):
-    await message.answer("тут уже не помочь")
+@utils_router.message(Command("start"))
+async def start_command_handler(message: types.Message, bot_config: FromDishka[BotConfig]):
+    await message.answer(
+        f"привет! здесь можно найти полезную информацию: {bot_config.help_article}\n\n"
+        "если хочешь пообщаться, то просто напиши сообщение! а еще ты можешь добавить меня в групповой чат"
+    )
 
 
 @utils_router.message(Command("terms"))
