@@ -50,6 +50,8 @@ async def support_again_button_handler(
             prices=[types.LabeledPrice(label="Поддержка", amount=support_config.price * 100)],
             start_parameter="support",
             provider_token=support_config.provider_token,
+            need_email=True,
+            send_email_to_provider=True
         )
     else:
         end_date = time.strftime("%d.%m.%Y", time.gmtime(user_supporter.end_timestamp))
