@@ -100,6 +100,13 @@ class DefaultGroupMessageProcessor(GroupMessageProcessor):
                     chat_state.is_focused = True
 
                     await self._db_session.commit()
+                        
+                    new_messages.append(
+                        {
+                            "role": "system",
+                            "content": self._llm_config.additional_instructions.aerith_has_mentioned,
+                        }
+                    )
                 else:
                     chat_state.sleeping_till = int(time.time()) + self._limits_config.group_cooldown
                     await self._db_session.commit()

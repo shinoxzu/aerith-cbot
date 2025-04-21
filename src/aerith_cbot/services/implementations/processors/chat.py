@@ -55,7 +55,6 @@ class DefaultChatProcessor(ChatProcessor):
         new_messages: list[dict] = []
 
         if chat_type == ChatType.group:
-            personal_context = await self._context_provider.provide_chat_users_context(chat_id)
             tools = self._llm_config.tools + self._llm_config.group_tools
             instruction_messages = [
                 {"role": "developer", "content": self._llm_config.group_instruction}
@@ -63,7 +62,6 @@ class DefaultChatProcessor(ChatProcessor):
             model_to_use = self._openai_config.group_model
             max_context_tokens = self._limits_config.group_max_context_tokens
         elif chat_type == ChatType.private:
-            personal_context = await self._context_provider.provide_private_user_context(chat_id)
             tools = self._llm_config.tools
             instruction_messages = [
                 {"role": "developer", "content": self._llm_config.private_instruction}
@@ -78,9 +76,6 @@ class DefaultChatProcessor(ChatProcessor):
 
         self._logger.info("Used model for chat %s: %s", chat_id, model_to_use)
         self._logger.info("max_context_tokens for chat %s: %s", chat_id, max_context_tokens)
-
-        # if personal_context is not None:
-        #     new_messages.append({"role": "system", "content": personal_context})
 
         tokens_to_subtract = 0
 
