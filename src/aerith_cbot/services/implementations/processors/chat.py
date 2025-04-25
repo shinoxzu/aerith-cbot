@@ -59,6 +59,7 @@ class DefaultChatProcessor(ChatProcessor):
             instruction_messages = [
                 {"role": "developer", "content": self._llm_config.group_instruction}
             ]
+
             model_to_use = self._openai_config.group_model
             max_context_tokens = self._limits_config.group_max_context_tokens
         elif chat_type == ChatType.private:

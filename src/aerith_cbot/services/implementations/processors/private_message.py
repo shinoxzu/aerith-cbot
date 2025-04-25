@@ -49,7 +49,7 @@ class DefaultPrivateMessageProcessor(PrivateMessageProcessor):
 
             await self._send_ignoring_if_needed(chat_state)
             return
-        
+
         new_messages: list[dict] = []
         if not chat_state.is_focused:
             chat_state.is_focused = True

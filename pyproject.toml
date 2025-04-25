@@ -46,3 +46,7 @@ extend-select = ["I"]
 
 [tool.uv.workspace]
 members = ["venv"]
+
+[tool.pyright]
+venvPath="."
+venv=".venv"
