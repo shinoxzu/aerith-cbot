@@ -3,26 +3,6 @@
     {
       "type": "function",
       "function": {
-        "name": "think",
-        "description": "Позволяет подумать",
-        "strict": true,
-        "parameters": {
-          "type": "object",
-          "required": ["thoughts"],
-          "properties": {
-            "thoughts": {
-              "type": "string",
-              "description": "Твои мысли"
-            }
-          },
-          "additionalProperties": false
-        }
-      }
-    },
-
-    {
-      "type": "function",
-      "function": {
         "name": "get_chat_info",
         "description": "Получает информацию о чате: название, описание и закрепленное сообщение",
         "strict": true,

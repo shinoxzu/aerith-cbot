@@ -8,11 +8,11 @@ connection_string = "postgresql+asyncpg://root:root@db/aerith"
 
 [openai]
 token="TOKEN"
-group_model = "gpt-4o"
-private_model = "gpt-4o-mini"
-private_support_model = "gpt-4o"
-summarizer_model = "gpt-4o-mini"
-memory_llm_model = "gpt-4o-mini"
+group_model = "gpt-5"
+private_model = "gpt-5-mini"
+private_support_model = "gpt-5"
+summarizer_model = "gpt-5-nano"
+memory_llm_model = "gpt-5-nano"
 memory_embedder_model = "text-embedding-3-small"
 
 [limits]
